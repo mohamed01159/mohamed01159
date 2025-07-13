@@ -1,0 +1,3311 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Blurb Finder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* CSS Variables for Theme Colors */
+        :root {
+            /* Light Theme (Default) */
+            --primary-color: #FF9900;
+            --primary-dark: #E68A00;
+            --secondary-color: #232F3E;
+            --background-color: #f5f7fa;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --secondary-text-color: #666;
+            --light-text-color: #777;
+            --border-color: #e6e9f0;
+            --input-bg: #ffffff;
+            --input-border: #ddd;
+            --tag-bg: #f0f0f0;
+            --tag-color: #555;
+            --btn-secondary-bg: #f0f0f0;
+            --btn-secondary-color: #333;
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+            --search-highlight-bg: rgba(255, 153, 0, 0.15);
+            --search-highlight-color: #E68A00;
+            --favorite-color: #FFD700;
+            --danger-color: #ff5a5f;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --primary-color: #FF9900;
+            --primary-dark: #E68A00;
+            --secondary-color: #232F3E;
+            --background-color: #121212;
+            --card-bg-color: #1E1E1E;
+            --text-color: #f0f0f0;
+            --secondary-text-color: #ccc;
+            --light-text-color: #aaa;
+            --border-color: #333;
+            --input-bg: #2D2D2D;
+            --input-border: #444;
+            --tag-bg: #333;
+            --tag-color: #ddd;
+            --btn-secondary-bg: #333;
+            --btn-secondary-color: #f0f0f0;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --search-highlight-bg: rgba(255, 153, 0, 0.25);
+            --search-highlight-color: #FF9900;
+            --favorite-color: #FFD700;
+            --danger-color: #ff5a5f;
+        }
+
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+             display: flex; /* Added for sticky footer */
+            flex-direction: column; /* Added for sticky footer */
+            min-height: 100vh; /* Added for sticky footer */
+        }
+    
+
+        /* Header Styles */
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            flex-wrap: wrap; /* Allow wrapping for smaller screens */
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 i {
+            color: var(--primary-color);
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Space between search and lang selector */
+        }
+        
+        .search-container {
+            display: flex;
+            width: 100%; /* Adjust for responsiveness */
+            max-width: 400px; /* Max width for search */
+            position: relative;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px 0 0 20px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        #search-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0 20px 20px 0;
+            padding: 0 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #search-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .language-selector-container {
+            display: flex;
+            align-items: center;
+        }
+
+        #language-selector {
+            padding: 8px 10px;
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+
+        /* Theme Toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #999;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider-icon {
+            color: white;
+            font-size: 12px;
+            margin: 0 6px;
+        }
+
+        /* Header User Profile */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            position: relative; /* This is crucial for the dropdown positioning */
+        }
+
+        .user-profile button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            /* display: none; /* Initially hidden - controlled by JS or inline style */
+            position: absolute;
+            top: calc(100% + 5px); /* Position below the button with a small gap */
+            right: 0;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 160px;
+            overflow: hidden; 
+        }
+
+        .profile-dropdown-item {
+            display: flex; /* For icon alignment */
+            align-items: center; /* For icon alignment */
+            gap: 10px; /* Space between icon and text */
+            padding: 12px 18px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 14px;
+        }
+
+        .profile-dropdown-item:hover {
+            background-color: var(--search-highlight-bg); /* Using existing variable for hover consistency */
+            color: var(--primary-color);
+        }
+
+        /* Search Autocomplete Dropdown */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg-color);
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .suggestion-item:hover {
+            background-color: rgba(255, 153, 0, 0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .suggestion-highlight {
+            font-weight: bold;
+            color: var(--primary-color);
+            background-color: var(--search-highlight-bg);
+            padding: 0 2px;
+        }
+        
+        .suggestion-category {
+            background-color: rgba(255, 153, 0, 0.05);
+        }
+        
+        .suggestion-subcategory {
+            padding-left: 30px;
+            background-color: var(--card-bg-color);
+        }
+        
+        .suggestion-selected {
+            background-color: rgba(255, 153, 0, 0.2); 
+            font-weight: bold;
+        }
+
+        .suggestion-item:hover {
+            background-color: rgba(255, 153, 0, 0.1);
+        }
+
+        .suggestion-selected:hover {
+            background-color: rgba(255, 153, 0, 0.3);
+        }
+
+        .name-inputs {
+            display: flex;
+            padding: 1rem 2rem;
+            background-color: var(--card-bg-color);
+            border-bottom: 1px solid var(--border-color);
+            gap: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .input-group label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+            font-weight: 500;
+        }
+        
+        .input-group input,
+        .input-group textarea, 
+        .input-group select {   
+            padding: 8px 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        .input-group input:focus,
+        .input-group textarea:focus, 
+        .input-group select:focus {  
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+        }
+
+        .categories {
+            background-color: var(--card-bg-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .main-categories {
+            display: flex;
+            justify-content: flex-start;
+            padding: 1rem 2rem;
+            overflow-x: auto;
+            gap: 10px;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        
+        .main-categories::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .main-categories::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+        
+        .main-categories::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 6px;
+        }
+
+        .category-btn {
+            background-color: var(--btn-secondary-bg);
+            border: none;
+            padding: 8px 16px;
+            margin-right: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.3s;
+            color: var(--text-color);
+        }
+
+        .category-btn:hover {
+            background-color: rgba(255, 153, 0, 0.2);
+        }
+
+        .category-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .sub-categories {
+            padding: 0.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            min-height: 30px; /* Ensure space even if no subcategories */
+        }
+
+        .subcategory-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .subcategory-btn {
+            background-color: transparent;
+            border: none;
+            padding: 6px 12px;
+            margin-right: 5px;
+            border-radius: 15px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .subcategory-btn:hover {
+            background-color: rgba(255, 153, 0, 0.1);
+        }
+
+        .subcategory-btn.active {
+            background-color: rgba(255, 153, 0, 0.2);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        main {
+            padding: 2rem;
+            position: relative;
+            flex-grow: 1; /* Allows main content to expand and push footer down */
+        }
+
+        .content-wrapper {
+            display: flex;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .blurb-container {
+            flex: 3;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .blurb-container.hidden {
+            display: none;
+        }
+
+        .favorites-container {
+            flex: 1;
+            background-color: var(--card-bg-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .favorites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .favorites-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .favorites-header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .fav-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--light-text-color);
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        
+        .fav-action-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .fav-action-btn#undo-clear-favorites:disabled {
+            color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+
+        .blurb-card {
+            background-color: var(--card-bg-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .blurb-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .highlight-card {
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.6);
+            border: 2px solid var(--primary-color);
+        }
+
+        .blurb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .blurb-title {
+            font-weight: bold;
+            color: var(--text-color);
+            overflow-wrap: break-word; /* <-- Add this line */
+    min-width: 0;            
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        .favorite-btn.active {
+            color: var(--favorite-color);
+        }
+
+        .blurb-content {
+            margin-bottom: 1rem;
+            font-size: 14px;
+            color: var(--secondary-text-color);
+            flex-grow: 1;
+            max-height: 150px; /* NEW: Set max height */
+            overflow-y: auto; /* NEW: Add scroll for overflow */
+            padding-right: 10px; /* NEW: Space for scrollbar */
+        }
+
+        .search-highlight {
+            background-color: var(--search-highlight-bg);
+            font-weight: bold;
+            color: var(--search-highlight-color);
+            padding: 0 2px;
+        }
+
+        .blurb-tags {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .tag {
+            background-color: var(--tag-bg);
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: var(--tag-color);
+        }
+
+        .blurb-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .preview-btn {
+            background-color: var(--btn-secondary-bg);
+            color: var(--btn-secondary-color);
+        }
+
+        .preview-btn:hover {
+            background-color: rgba(255, 153, 0, 0.2);
+            color: var(--text-color);
+        }
+
+        .favorite-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .favorite-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-color);
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        .favorite-title:hover {
+            color: var(--primary-color);
+        }
+
+        .action-btn.small {
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+
+        .favorite-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .remove-fav-btn {
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 5px;
+        }
+        
+        .remove-fav-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-text-color);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none; 
+        }
+
+        .modal-content {
+            background-color: var(--card-bg-color);
+            border-radius: 10px;
+            padding: 25px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--light-text-color);
+        }
+
+        .modal-close:hover {
+            color: var(--text-color);
+        }
+
+        .preview-email {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            white-space: pre-line;
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            /* For textarea specifically */
+            width: 100%;
+            min-height: 200px; /* Adjust as needed */
+            resize: vertical;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            flex-wrap: wrap; 
+        }
+        
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .case-notes-box, .ai-chat-box {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 320px;
+            background-color: var(--card-bg-color);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 950;
+            display: flex;
+            flex-direction: column;
+            max-height: 500px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .ai-chat-box {
+            bottom: 20px; /* Adjust as needed to not overlap notes */
+            left: 20px; /* Position on the left */
+        }
+
+        .case-notes-header, .ai-chat-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .case-notes-header h3, .ai-chat-header h3 {
+            margin: 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .case-notes-header h3 i, .ai-chat-header h3 i {
+            color: var(--primary-color);
+        }
+
+        .case-notes-actions, .ai-chat-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .case-notes-btn, .ai-chat-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .case-notes-btn:hover, .ai-chat-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .case-notes-btn:disabled, .ai-chat-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .case-notes-content, .ai-chat-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+            max-height: 400px; 
+            scrollbar-width: thin;
+        }
+
+        .case-notes-content::-webkit-scrollbar, .ai-chat-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .case-notes-content::-webkit-scrollbar-track, .ai-chat-content::-webkit-scrollbar-track {
+            background: var(--input-bg);
+        }
+
+        .case-notes-content::-webkit-scrollbar-thumb, .ai-chat-content::-webkit-scrollbar-thumb {
+            background-color: var(--secondary-text-color);
+            border-radius: 6px;
+        }
+
+        .case-note-field {
+            margin-bottom: 12px;
+        }
+
+        .case-note-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .case-note-field textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            min-height: 32px; 
+            transition: height 0.2s ease;
+            overflow: hidden; 
+        }
+
+        .case-note-field textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+        }
+
+        .case-notes-box.collapsed .case-notes-content,
+        .case-notes-box.collapsed .case-notes-footer,
+        .ai-chat-box.collapsed .ai-chat-content,
+        .ai-chat-box.collapsed .ai-chat-footer { 
+            display: none;
+        }
+
+        .case-notes-box.collapsed, .ai-chat-box.collapsed {
+            max-height: 45px; 
+        }
+
+        .toggle-collapse {
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .case-notes-footer, .ai-chat-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 10px 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .case-notes-footer .action-btn, .ai-chat-footer .action-btn {
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+
+        .notes-review-content, .ai-chat-response-content {
+            padding: 15px;
+            background-color: var(--background-color); 
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .notes-review-item {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .notes-review-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .notes-review-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .notes-review-text {
+            color: var(--text-color);
+            white-space: pre-line; 
+        }
+        .notes-review-empty {
+            font-style: italic;
+            color: var(--light-text-color);
+        }
+        
+        /* Settings Modal Specific Styles */
+        .settings-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .settings-section h4 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .setting-item label {
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+             header {
+                flex-direction: column;
+                gap: 0.5rem; /* Smaller gap for tighter packing */
+            }
+            .header-center {
+                width: 100%;
+                justify-content: space-between; /* Space out search and lang selector */
+                margin-bottom: 0.5rem;
+            }
+            .search-container {
+                max-width: none; /* Allow search to take more space */
+                flex-grow: 1; /* Allow search to grow */
+            }
+            .language-selector-container {
+                /* Styles for language selector if needed */
+            }
+            .user-profile { 
+                width: 100%;
+                justify-content: space-between; /* Space out theme and profile */
+            }
+            .case-notes-box {
+                width: 280px;
+                right: 10px;
+                bottom: 10px;
+            }
+            .ai-chat-box {
+                width: 280px;
+                left: 10px;
+                bottom: 10px;
+            }
+            .name-inputs {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .input-group {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .blurb-container {
+                grid-template-columns: 1fr; 
+            }
+            .case-notes-box { 
+                width: calc(100% - 20px);
+                max-width: none;
+                right: 10px;
+                left: 10px;
+            }
+            .ai-chat-box {
+                width: calc(100% - 20px);
+                max-width: none;
+                right: 10px;
+                left: 10px;
+                bottom: 150px; /* Adjust to not overlap with notes */
+            }
+            .modal-footer { 
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .modal-footer button,
+            .modal-footer select {
+                width: 100%;
+                margin-bottom: 10px; 
+            }
+            .modal-footer select:last-child,
+            .modal-footer button:last-child {
+                margin-bottom: 0; 
+            }
+        }
+        
+        .admin-nav-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: left;
+            background: var(--btn-secondary-bg);
+            border: none;
+            border-radius: 5px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .admin-nav-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .admin-section {
+            display: none; 
+        }
+
+        .admin-table-row {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table-row td {
+            padding: 10px;
+            vertical-align: middle; 
+            max-width: 250px; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .admin-table-row td:hover { 
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .admin-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .admin-action-btn.edit-btn {
+            color: var(--primary-color);
+        }
+
+        .admin-action-btn.delete-btn {
+            color: #ff5a5f; 
+        }
+
+        #blurb-form-content, #import-data-area, #export-data-area /* Updated ID */ {
+            min-height: 200px;
+            font-family: monospace; 
+            font-size: 14px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            padding: 10px;
+            border-radius: 5px;
+            resize: vertical; 
+            width: 100%; /* Ensure textarea takes full width */
+        }
+        
+        #admin-panel-modal .input-group label { /* Ensure labels in admin are visible */
+            color: var(--secondary-text-color);
+        }
+        #admin-language-selector-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+        #admin-language-selector-container label {
+            margin-right: 10px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #admin-language-selector {
+             padding: 8px 10px;
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+
+        #admin-categories table, #admin-blurbs table {
+            table-layout: fixed; 
+            width: 100%;
+        }
+
+        #category-list td:nth-child(1),
+        #subcategory-list td:nth-child(1) {
+            width: 20%; 
+        }
+
+        #category-list td:nth-child(2),
+        #subcategory-list td:nth-child(2),
+        #subcategory-list td:nth-child(3) {
+            width: 60%; 
+        }
+
+        #category-list td:nth-child(3),
+        #subcategory-list td:nth-child(4) {
+            width: 20%; 
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content { 
+                width: 95% !important; 
+                padding: 15px 10px;
+            }
+            
+            #admin-panel-modal [style*="display: flex; gap: 20px"] { 
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1><i class="fas fa-envelope"></i> Flex E-Mail</h1> 
+        </div>
+        <div class="header-center">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search blurbs, categories...">
+                <button id="search-button"><i class="fas fa-search"></i></button>
+                <div class="search-suggestions" id="search-suggestions">
+                </div>
+            </div>
+            <div class="language-selector-container">
+                <select id="language-selector">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    </select>
+            </div>
+        </div>
+        <div class="user-profile">
+            <div class="theme-toggle">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="profile-dropdown" id="profile-dropdown" style="display: none;">
+                <a href="#" class="profile-dropdown-item" id="settings-link"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" class="profile-dropdown-item" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <button id="profile-button"><i class="fas fa-user-circle"></i></button>
+        </div>
+    </header>
+
+    <nav class="categories">
+        <div class="main-categories" id="main-categories-container">
+            </div>
+        <div class="sub-categories" id="subcategory-container">
+            </div>
+    </nav>
+
+    <div class="case-notes-box" id="case-notes-box">
+        <div class="case-notes-header" id="notes-header">
+            <h3><i class="fas fa-clipboard-list"></i> Felx Tier1</h3>
+            <div class="case-notes-actions">
+                <button id="undo-notes" class="case-notes-btn" disabled><i class="fas fa-undo"></i></button>
+                <button id="reset-notes" class="case-notes-btn"><i class="fas fa-trash-alt"></i></button>
+                <button id="toggle-notes" class="toggle-collapse"><i class="fas fa-chevron-down"></i></button>
+            </div>
+        </div>
+        <div class="case-notes-content">
+            <div class="case-note-field">
+                <label for="driver-status">Driver's status:</label> <textarea id="driver-status" rows="1"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="driver-issue">Issue:</label> <textarea id="driver-issue" rows="2"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="resolution-notes">Resolution/Notes:</label> <textarea id="resolution-notes" rows="3"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="ticket-id">Ticket if applicable:</label> <textarea id="ticket-id" rows="1"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="tracking-id">Tracking/Order ID:</label> <textarea id="tracking-id" rows="1"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="exemption-message">Exemption Message:</label> <textarea id="exemption-message" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="case-notes-footer">
+            <button class="action-btn preview-btn" id="review-notes-btn">Review</button>
+            <button class="action-btn copy-btn" id="copy-notes-btn">Copy Notes</button>
+        </div>
+    </div>
+
+    <div class="ai-chat-box" id="ai-chat-box">
+        <div class="ai-chat-header" id="ai-chat-header">
+            <h3><i class="fas fa-robot"></i> AI Driver Mail Analyzer</h3>
+            <div class="ai-chat-actions">
+                <button id="toggle-ai-chat" class="toggle-collapse"><i class="fas fa-chevron-down"></i></button>
+            </div>
+        </div>
+        <div class="ai-chat-content">
+            <div class="case-note-field">
+                <label for="driver-mail-input">Paste Driver's Email Here:</label>
+                <textarea id="driver-mail-input" rows="8" placeholder="e.g., 'Hi, my delivery is late and I need to know why. Order #12345.'"></textarea>
+            </div>
+            <div class="case-note-field">
+                <label for="ai-response-output">AI Analysis:</label>
+                <textarea id="ai-response-output" rows="6" readonly placeholder="AI will identify the driver's request here..."></textarea>
+            </div>
+        </div>
+        <div class="ai-chat-footer">
+            <button class="action-btn copy-btn" id="analyze-mail-btn">Analyze Mail ✨</button>
+            <button class="action-btn preview-btn" id="clear-ai-chat-btn">Clear</button>
+        </div>
+    </div>
+    <main>
+        <div class="content-wrapper">
+            <section class="blurb-container" id="blurb-container">
+            </section>
+            <aside class="favorites-container">
+                <div class="favorites-header">
+                    <h2><i class="fas fa-star"></i> Favorites</h2>
+                    <div class="favorites-header-actions">
+                        <button id="clear-all-favorites" class="fav-action-btn" title="Clear All Favorites"><i class="fas fa-trash-alt"></i></button>
+                        <button id="undo-clear-favorites" class="fav-action-btn" title="Undo Clear" disabled><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <div id="favorites-list">
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="preview-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Email Preview</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <textarea class="preview-email" id="preview-content"></textarea>
+            <div class="modal-footer">
+                <button class="action-btn copy-btn" id="modal-copy">COPY</button>
+                <button class="action-btn preview-btn" id="modal-close-btn">CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="modal-close" id="settings-modal-close">&times;</button>
+            </div>
+            <div class="settings-section">
+                <h4>Display Options</h4>
+                <div class="setting-item">
+                    <label for="hide-blurbs-toggle">Hide Blurbs Panel</label>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="hide-blurbs-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: 12px; color: var(--light-text-color); margin-top: 8px;">
+                    Hide the main blurb grid to rely only on the search bar.
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal-overlay" id="notes-review-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Flex Tier1</h3>
+                <button class="modal-close" id="notes-modal-close">&times;</button>
+            </div>
+            <div class="notes-review-content" id="notes-review-content-main"> </div>
+            <div id="notes-summary-section" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); display: none;">
+                <h4 style="color: var(--primary-color); margin-bottom: 10px;">Summary ✨</h4>
+                <div id="generated-notes-summary" class="notes-review-text" style="background-color: var(--background-color); padding: 10px; border-radius: 5px; border: 1px dashed var(--border-color);">
+                    No summary generated yet.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn copy-btn" id="notes-modal-copy">COPY ALL</button>
+                <button class="action-btn preview-btn" id="notes-modal-close-btn">CLOSE</button>
+                <button class="action-btn copy-btn" id="summarize-notes-btn" style="background-color: #6c757d;">Summarize All Notes ✨</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="admin-login-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Admin Login</h3>
+                <button class="modal-close" id="admin-login-close">&times;</button>
+            </div>
+            <div style="padding: 15px;">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" placeholder="Enter admin password">
+                </div>
+                <div id="login-error" style="color: red; margin-bottom: 15px; display: none;">
+                    Incorrect password. Please try again.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn copy-btn" id="admin-login-btn">LOGIN</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="admin-panel-modal">
+        <div class="modal-content" style="max-width: 95%; width: 1200px; max-height: 90vh;"> 
+            <div class="modal-header">
+                <h3 class="modal-title">Admin Panel</h3>
+                <button class="modal-close" id="admin-panel-close">&times;</button>
+            </div>
+            
+            <div id="admin-language-selector-container">
+                <label for="admin-language-selector">Editing Language:</label>
+                <select id="admin-language-selector">
+                    </select>
+            </div>
+
+            <div style="display: flex; padding: 15px; gap: 15px; height: calc(90vh - 200px);"> 
+                <div style="width: 200px; border-right: 1px solid var(--border-color); padding-right: 15px;">
+                    <button class="admin-nav-btn active" data-section="blurbs">Manage Blurbs</button>
+                    <button class="admin-nav-btn" data-section="categories">Manage Categories</button>
+                    <button class="admin-nav-btn" data-section="languages">Manage Languages</button> <button class="admin-nav-btn" data-section="export">Export/Import</button>
+                </div>
+                
+                <div style="flex: 1; overflow-y: auto;">
+                    <div class="admin-section" id="admin-blurbs" style="display: block;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4>All Blurbs (<span id="admin-editing-lang-blurbs">EN</span>)</h4>
+                            <div>
+                                <button class="action-btn preview-btn show-all-btn" data-target="blurbs">Show All</button>
+                                <button class="action-btn preview-btn hide-all-btn" data-target="blurbs">Hide All</button>
+                                <button class="action-btn copy-btn" id="add-blurb-btn">Add New Blurb</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <div style="position: relative;">
+                                    <input type="text" id="admin-blurb-search" placeholder="Search blurbs by title, content or tags..." 
+                                        style="width: 100%; padding: 8px 12px 8px 35px;">
+                                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); 
+                                    color: var(--light-text-color);"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="blurb-list-container" style="border: 1px solid var(--border-color); border-radius: 5px; max-height: 400px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">ID</th>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">Title</th>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">Category</th>
+                                        <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-color);">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blurb-list"></tbody>
+                            </table>
+                        </div>
+                        <div id="blurb-form" style="margin-top: 20px; display: none;">
+                            <h4 id="form-title">Add New Blurb</h4>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="blurb-form-title">Title</label>
+                                <input type="text" id="blurb-form-title" placeholder="Enter blurb title">
+                            </div>
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label for="blurb-form-main-category">Main Category</label>
+                                    <select id="blurb-form-main-category"></select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label for="blurb-form-subcategory">Subcategory</label>
+                                    <select id="blurb-form-subcategory"></select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="blurb-form-tags">Tags (comma separated)</label>
+                                <input type="text" id="blurb-form-tags" placeholder="welcome, onboarding, etc.">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="blurb-form-content">Content</label>
+                                <textarea id="blurb-form-content" rows="10" placeholder="Enter blurb content..."></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                                <input type="hidden" id="blurb-form-id" value="">
+                                <button class="action-btn preview-btn" id="cancel-blurb-btn">Cancel</button>
+                                <button class="action-btn copy-btn" id="save-blurb-btn">Save Blurb</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-section" id="admin-categories" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                             <h4>Categories & Subcategories (<span id="admin-editing-lang-categories">EN</span>)</h4>
+                        </div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;"> 
+                            <div style="flex: 1; min-width: 300px;"> 
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h5>Main Categories</h5>
+                                    <div>
+                                        <button class="action-btn preview-btn show-all-btn" data-target="categories">Show All</button>
+                                        <button class="action-btn preview-btn hide-all-btn" data-target="categories">Hide All</button>
+                                        <button class="action-btn copy-btn" id="add-category-btn">Add Category</button>
+                                    </div>
+                                </div>
+                                <div class="input-group" style="margin-bottom: 15px;">
+                                    <div style="position: relative;">
+                                        <input type="text" id="admin-category-search" placeholder="Search categories..." style="width: 100%; padding: 8px 12px 8px 35px;">
+                                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--light-text-color);"></i>
+                                    </div>
+                                </div>
+                                <div class="category-list-container" style="border: 1px solid var(--border-color); border-radius: 5px; max-height: 400px; overflow-y: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">ID</th>
+                                                <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">Name</th>
+                                                <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-color);">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="category-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 300px;"> 
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h5>Subcategories</h5>
+                                    <div>
+                                        <button class="action-btn preview-btn show-all-btn" data-target="subcategories">Show All</button>
+                                        <button class="action-btn preview-btn hide-all-btn" data-target="subcategories">Hide All</button>
+                                        <button class="action-btn copy-btn" id="add-subcategory-btn">Add Subcategory</button>
+                                    </div>
+                                </div>
+                                <div class="input-group" style="margin-bottom: 15px;">
+                                    <div style="position: relative;">
+                                        <input type="text" id="admin-subcategory-search" placeholder="Search subcategories..." style="width: 100%; padding: 8px 12px 8px 35px;">
+                                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--light-text-color);"></i>
+                                    </div>
+                                </div>
+                                <div class="subcategory-list-container" style="border: 1px solid var(--border-color); border-radius: 5px; max-height: 400px; overflow-y: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">ID</th>
+                                                <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">Name</th>
+                                                <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color);">Parent</th>
+                                                <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-color);">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="subcategory-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="category-form" style="margin-top: 20px; display: none;">
+                            <h4 id="category-form-title">Add Main Category</h4>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="category-form-id">Category ID </label>
+                                <input type="text" id="category-form-id" placeholder="e.g., onboarding-welcome">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="category-form-name">Display Name</label>
+                                <input type="text" id="category-form-name" placeholder="e.g., Onboarding Welcome">
+                            </div>
+                            <div id="parent-category-group" style="display: none;" class="input-group" style="margin-bottom: 15px;">
+                                <label for="category-form-parent">Parent Category</label>
+                                <select id="category-form-parent"></select>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                                <input type="hidden" id="category-form-original-id" value="">
+                                <input type="hidden" id="category-form-type" value="main">
+                                <button class="action-btn preview-btn" id="cancel-category-btn">Cancel</button>
+                                <button class="action-btn copy-btn" id="save-category-btn">Save Category</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-section" id="admin-languages" style="display: none;">
+                        <h4>Manage Languages</h4>
+                        <div class="input-group" style="margin-bottom: 15px; max-width: 500px;">
+                            <label for="new-lang-code">New Language Code (e.g., 'es', 'de')</label>
+                            <input type="text" id="new-lang-code" placeholder="fr">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 15px; max-width: 500px;">
+                            <label for="new-lang-name">New Language Name (e.g., 'Español', 'Deutsch')</label>
+                            <input type="text" id="new-lang-name" placeholder="Français">
+                        </div>
+                        <button class="action-btn copy-btn" id="add-new-language-btn">Add Language</button>
+                        
+                        <h5 style="margin-top: 20px; margin-bottom: 10px;">Existing Languages:</h5>
+                        <ul id="existing-languages-list" style="list-style: none; padding: 0;">
+                            </ul>
+                    </div>
+                    
+                    <div class="admin-section" id="admin-export" style="display: none;">
+                        <h4>Export/Import Data (All Languages)</h4>
+                        <p style="margin-bottom: 15px;">Backup all blurbs and categories for all languages or import from a file.</p>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button class="action-btn copy-btn" id="export-data-btn">Export All Data</button>
+                            <button class="action-btn preview-btn" id="import-data-btn">Import Data</button>
+                        </div>
+                        <div id="import-form" style="display: none; margin-top: 15px;">
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label for="import-data-area">Paste exported data here (JSON format):</label>
+                                <textarea id="import-data-area" rows="10" placeholder='{"en": {"blurbs": [], "categoryStructure": {}}, "fr": ...}'></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                                <button class="action-btn preview-btn" id="cancel-import-btn">Cancel</button>
+                                <button class="action-btn copy-btn" id="confirm-import-btn">Import</button>
+                            </div>
+                        </div>
+                         <div id="export-data-container" style="margin-top: 15px; display:none;">
+                            <label for="export-data-area">Exported Data (Copy this):</label>
+                            <textarea id="export-data-area" rows="10" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="permanent-confirm-dialog" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmation</h3>
+            </div>
+            <div style="padding: 15px;">
+                <p id="confirm-message">Are you sure?</p>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;"> 
+                <button class="action-btn preview-btn" id="confirm-cancel-btn" style="min-width: 80px;">Cancel</button>
+                <button class="action-btn copy-btn" id="confirm-ok-btn" style="min-width: 80px;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Email Blurb Finder | <a href="#" id="admin-login-link">Admin Login</a></p>
+    </footer>
+        <script src="Blurbs.js"></script>
+
+
+    <script>
+        // --- Global State and Configuration ---
+        let currentLanguage = 'en'; // Default language
+        let currentAdminEditingLang = 'en'; // Default language for admin editing
+        let lastClearedFavoriteIds = []; // For the undo clear favorites functionality
+
+        const USAGE_STATS_KEY = 'emailBlurbUsageStats';
+        // Stores all blurbs and categories, keyed by language code
+        // Start with a minimal structure. Data will be loaded from localStorage or added via admin.
+        
+        
+        const LOCAL_STORAGE_KEY = 'emailBlurbFinder_content';
+        const SETTINGS_KEY = 'emailBlurbFinder_settings';
+
+        // --- DOM Elements (Cached) ---
+        // Main UI
+        const themeToggle = document.getElementById('theme-toggle');
+        const mainLanguageSelector = document.getElementById('language-selector');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const searchSuggestions = document.getElementById('search-suggestions');
+        const mainCategoriesContainer = document.getElementById('main-categories-container');
+        const subcategoryContainer = document.getElementById('subcategory-container');
+        const blurbContainer = document.getElementById('blurb-container');
+        const favoritesList = document.getElementById('favorites-list');
+        const clearAllFavoritesBtn = document.getElementById('clear-all-favorites');
+        const undoClearFavoritesBtn = document.getElementById('undo-clear-favorites');
+        // Preview Modal
+        const previewModal = document.getElementById('preview-modal');
+        const previewContent = document.getElementById('preview-content');
+        const modalClose = document.getElementById('modal-close');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalCopy = document.getElementById('modal-copy');
+        // Settings Modal
+        const settingsLink = document.getElementById('settings-link');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalClose = document.getElementById('settings-modal-close');
+        const hideBlurbsToggle = document.getElementById('hide-blurbs-toggle');
+        // Case Notes
+        const noteFields = document.querySelectorAll('#case-notes-box textarea');
+        const resetNotesBtn = document.getElementById('reset-notes');
+        const undoNotesBtn = document.getElementById('undo-notes');
+        const toggleNotesBtn = document.getElementById('toggle-notes');
+        const notesHeader = document.getElementById('notes-header');
+        const notesBox = document.getElementById('case-notes-box');
+        const copyNotesBtn = document.getElementById('copy-notes-btn');
+        const reviewNotesBtn = document.getElementById('review-notes-btn');
+        // Notes Review Modal
+        const notesReviewModal = document.getElementById('notes-review-modal');
+        const notesReviewContentMain = document.getElementById('notes-review-content-main');
+        const notesModalClose = document.getElementById('notes-modal-close');
+        const notesModalCloseBtn = document.getElementById('notes-modal-close-btn');
+        const notesModalCopy = document.getElementById('notes-modal-copy');
+        const summarizeNotesBtn = document.getElementById('summarize-notes-btn');
+        const notesSummarySection = document.getElementById('notes-summary-section');
+        const generatedNotesSummary = document.getElementById('generated-notes-summary');
+        // AI Chat
+        const aiChatBox = document.getElementById('ai-chat-box');
+        const aiChatHeader = document.getElementById('ai-chat-header');
+        const toggleAiChatBtn = document.getElementById('toggle-ai-chat');
+        const driverMailInput = document.getElementById('driver-mail-input');
+        const aiResponseOutput = document.getElementById('ai-response-output');
+        const analyzeMailBtn = document.getElementById('analyze-mail-btn');
+        const clearAiChatBtn = document.getElementById('clear-ai-chat-btn');
+        // Admin Login
+        const adminLoginLink = document.getElementById('admin-login-link');
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const adminLoginClose = document.getElementById('admin-login-close');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const loginError = document.getElementById('login-error');
+        // Admin Panel
+        const adminPanelModal = document.getElementById('admin-panel-modal');
+        const adminPanelClose = document.getElementById('admin-panel-close');
+        const adminLanguageSelector = document.getElementById('admin-language-selector');
+        const adminNavButtons = document.querySelectorAll('.admin-nav-btn');
+        const adminSections = document.querySelectorAll('.admin-section');
+        const adminEditingLangBlurbsSpan = document.getElementById('admin-editing-lang-blurbs');
+        const adminEditingLangCategoriesSpan = document.getElementById('admin-editing-lang-categories');
+        // Admin Blurbs
+        const adminBlurbList = document.getElementById('blurb-list');
+        const addBlurbBtn = document.getElementById('add-blurb-btn');
+        const blurbForm = document.getElementById('blurb-form');
+        const blurbFormTitleEl = document.getElementById('form-title');
+        const cancelBlurbBtn = document.getElementById('cancel-blurb-btn');
+        const saveBlurbBtn = document.getElementById('save-blurb-btn');
+        const adminBlurbSearch = document.getElementById('admin-blurb-search');
+        const blurbFormTitleInput = document.getElementById('blurb-form-title');
+        const blurbFormMainCategory = document.getElementById('blurb-form-main-category');
+        const blurbFormSubcategory = document.getElementById('blurb-form-subcategory');
+        const blurbFormTags = document.getElementById('blurb-form-tags');
+        const blurbFormContent = document.getElementById('blurb-form-content');
+        const blurbFormIdInput = document.getElementById('blurb-form-id');
+        // Admin Categories
+        const adminCategoryListEl = document.getElementById('category-list');
+        const adminSubcategoryListEl = document.getElementById('subcategory-list');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const addSubcategoryBtn = document.getElementById('add-subcategory-btn');
+        const categoryForm = document.getElementById('category-form');
+        const categoryFormTitleEl = document.getElementById('category-form-title');
+        const cancelCategoryBtn = document.getElementById('cancel-category-btn');
+        const saveCategoryBtn = document.getElementById('save-category-btn');
+        const adminCategorySearch = document.getElementById('admin-category-search');
+        const adminSubCategorySearch = document.getElementById('admin-subcategory-search');
+        const categoryFormIdInput = document.getElementById('category-form-id');
+        const categoryFormNameInput = document.getElementById('category-form-name');
+        const categoryFormParentSelect = document.getElementById('category-form-parent');
+        const categoryFormTypeInput = document.getElementById('category-form-type');
+        const categoryFormOriginalIdInput = document.getElementById('category-form-original-id');
+        const parentCategoryGroup = document.getElementById('parent-category-group');
+        // Admin Languages
+        const newLangCodeInput = document.getElementById('new-lang-code');
+        const newLangNameInput = document.getElementById('new-lang-name');
+        const addNewLangBtn = document.getElementById('add-new-language-btn');
+        const existingLanguagesList = document.getElementById('existing-languages-list');
+        // Admin Export/Import
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const importDataBtn = document.getElementById('import-data-btn');
+        const importForm = document.getElementById('import-form');
+        const importDataTextarea = document.getElementById('import-data-area');
+        const cancelImportBtn = document.getElementById('cancel-import-btn');
+        const confirmImportBtn = document.getElementById('confirm-import-btn');
+        const exportDataContainer = document.getElementById('export-data-container');
+        const exportDataTextarea = document.getElementById('export-data-area');
+
+
+        // --- Utility Functions ---
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function getLangFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('lang');
+        }
+
+        function setLangInURL(langCode) {
+            // Check if the current URL is a blob URL.
+            if (window.location.protocol === 'blob:') {
+                console.warn("Current page is a blob: URL. Skipping history.replaceState to avoid SecurityError. Language selection will not persist in URL for this session if it's the initial load context.");
+                return;
+            }
+        
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('lang', langCode);
+            try {
+                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+            } catch (e) {
+                console.error("Error in setLangInURL with history.replaceState:", e);
+            }
+        }
+        
+        // --- Usage Tracking ---
+        function incrementUsageStat(statName) {
+            try {
+                let stats = JSON.parse(localStorage.getItem(USAGE_STATS_KEY)) || {};
+                stats[statName] = (stats[statName] || 0) + 1;
+                localStorage.setItem(USAGE_STATS_KEY, JSON.stringify(stats));
+            } catch (e) {
+                console.error("Error updating usage stats:", e);
+            }
+        }
+
+        function getUsageStat(statName) {
+            let stats = JSON.parse(localStorage.getItem(USAGE_STATS_KEY)) || {};
+            return stats[statName] || 0;
+        }
+        
+        // --- Settings Management ---
+        function loadSettings() {
+            const savedSettings = localStorage.getItem(SETTINGS_KEY);
+            if (savedSettings) {
+                return JSON.parse(savedSettings);
+            }
+            return { hideBlurbs: false }; // Default settings
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+
+        // --- Data Management ---
+        function loadDataFromLocalStorage() {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            let parsedData = {};
+
+            if (savedData) {
+                try {
+                    parsedData = JSON.parse(savedData);
+                } catch (e) {
+                    console.error("Error parsing data from localStorage:", e);
+                    // If parsing fails, parsedData remains empty, and defaults will be used/ensured.
+                }
+            }
+
+            // Merge saved data with initial defaults to ensure 'en' and 'fr' are at least minimally defined.
+            // Then, ensure all languages (from initial defaults or loaded from storage) have the necessary structure.
+            const allLangCodes = [...new Set([...Object.keys(appContentByLang), ...Object.keys(parsedData)])];
+
+            allLangCodes.forEach(langCode => {
+                const loadedLangData = parsedData[langCode] || {};
+                const defaultLangData = appContentByLang[langCode] || {}; // Get initial default if it exists
+
+                appContentByLang[langCode] = {
+                    blurbs: loadedLangData.blurbs || defaultLangData.blurbs || [],
+                    categoryStructure: loadedLangData.categoryStructure || defaultLangData.categoryStructure || {},
+                    languageName: loadedLangData.languageName || defaultLangData.languageName || langCode.toUpperCase()
+                }
+            });
+        }
+
+        function saveDataToLocalStorage() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appContentByLang));
+        }
+
+        function getCurrentBlurbs() {
+            return appContentByLang[currentLanguage] ? appContentByLang[currentLanguage].blurbs : [];
+        }
+
+        function getCurrentCategoryStructure() {
+            return appContentByLang[currentLanguage] ? appContentByLang[currentLanguage].categoryStructure : {};
+        }
+        
+        function getAdminBlurbs() {
+            return appContentByLang[currentAdminEditingLang] ? appContentByLang[currentAdminEditingLang].blurbs : [];
+        }
+
+        function getAdminCategoryStructure() {
+            return appContentByLang[currentAdminEditingLang] ? appContentByLang[currentAdminEditingLang].categoryStructure : {};
+        }
+
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', function() {
+            incrementUsageStat('appOpens'); // Track app open
+            loadDataFromLocalStorage(); // Load all language data
+
+            const langFromURL = getLangFromURL();
+            if (langFromURL && appContentByLang[langFromURL]) {
+                currentLanguage = langFromURL;
+            } else {
+                currentLanguage = 'en'; // Default if not in URL or not supported
+                setLangInURL(currentLanguage); // Set default in URL
+            }
+            currentAdminEditingLang = currentLanguage; // Default admin lang to current UI lang
+
+            // Theme
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (themeToggle) themeToggle.checked = savedTheme === 'dark';
+
+            // Apply settings
+            applyCurrentSettings();
+
+            // Populate Language Selectors
+            populateLanguageSelectors();
+            if(mainLanguageSelector) mainLanguageSelector.value = currentLanguage;
+            if(adminLanguageSelector) adminLanguageSelector.value = currentAdminEditingLang;
+
+
+            // Initial UI Render for current language
+            initializeUIForLanguage(currentLanguage);
+            
+            // Add Event Listeners
+            setupEventListeners();
+        });
+        
+        function applyCurrentSettings() {
+            const settings = loadSettings();
+            // Hide blurbs setting
+            if (settings.hideBlurbs) {
+                blurbContainer.classList.add('hidden');
+            } else {
+                blurbContainer.classList.remove('hidden');
+            }
+            if (hideBlurbsToggle) {
+                hideBlurbsToggle.checked = settings.hideBlurbs;
+            }
+        }
+
+        function initializeUIForLanguage(langCode) {
+            currentLanguage = langCode;
+            if(mainLanguageSelector) mainLanguageSelector.value = langCode; // Sync dropdown
+            
+            initializeCategoryUI(); 
+            renderBlurbs(getCurrentBlurbs());
+            renderFavorites();
+        }
+        
+        function populateLanguageSelectors() {
+            if (!mainLanguageSelector || !adminLanguageSelector) return;
+            
+            mainLanguageSelector.innerHTML = '';
+            adminLanguageSelector.innerHTML = '';
+
+            Object.keys(appContentByLang).forEach(langCode => {
+                const langName = appContentByLang[langCode].languageName || langCode.toUpperCase();
+                
+                const mainOption = document.createElement('option');
+                mainOption.value = langCode;
+                mainOption.textContent = langName;
+                mainLanguageSelector.appendChild(mainOption);
+
+                const adminOption = document.createElement('option');
+                adminOption.value = langCode;
+                adminOption.textContent = langName;
+                adminLanguageSelector.appendChild(adminOption);
+            });
+            mainLanguageSelector.value = currentLanguage;
+            adminLanguageSelector.value = currentAdminEditingLang;
+        }
+
+
+        function setupEventListeners() {
+            // Theme Toggle
+            if (themeToggle) {
+                themeToggle.addEventListener('change', function() {
+                    const theme = this.checked ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                });
+            }
+            // Main Language Selector
+            if (mainLanguageSelector) {
+                mainLanguageSelector.addEventListener('change', function() {
+                    const selectedLang = this.value;
+                    setLangInURL(selectedLang);
+                    initializeUIForLanguage(selectedLang); // This will set currentLanguage and re-render
+                });
+            }
+
+            // Search
+            if(searchInput) {
+                searchInput.addEventListener('input', handleSearchInput);
+                searchInput.addEventListener('keydown', handleSearchKeydown);
+                searchInput.addEventListener('keyup', function(event) {
+                    if (event.key === 'Enter' && (!searchSuggestions || searchSuggestions.style.display === 'none' || currentSuggestionIndex === -1)) {
+                        performSearch();
+                    }
+                });
+            }
+            if(searchButton) searchButton.addEventListener('click', performSearch);
+
+            // Profile Dropdown
+            if (profileButton && profileDropdown) {
+                profileButton.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent click from immediately closing dropdown via global listener
+                    profileDropdown.style.display = profileDropdown.style.display === 'block' ? 'none' : 'block';
+                });
+
+                const logoutLink = document.getElementById('logout-link');
+
+                if (settingsLink) {
+                    settingsLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        profileDropdown.style.display = 'none';
+                        showSettingsModal();
+                    });
+                }
+
+                if (logoutLink) {
+                    logoutLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        console.log('Logout clicked');
+                        showConfirmDialog('Logout: Feature not yet implemented.', () => {}, true);
+                        profileDropdown.style.display = 'none'; // Close dropdown
+                    });
+                }
+            }
+
+            // Global click listener to close popups like search suggestions and profile dropdown
+            document.addEventListener('click', function(event) {
+                // Close search suggestions
+                if (searchSuggestions && searchInput && searchSuggestions.style.display === 'block') {
+                    if (!searchInput.contains(event.target) && !searchSuggestions.contains(event.target)) {
+                        searchSuggestions.style.display = 'none';
+                        currentSuggestionIndex = -1;
+                    }
+                }
+                // Close profile dropdown
+                if (profileDropdown && profileButton && profileDropdown.style.display === 'block') {
+                    if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+                        profileDropdown.style.display = 'none'; // Ensure this is correctly closed
+                    }
+                }
+            });
+
+            // Modals
+            if(modalClose) modalClose.addEventListener('click', closePreviewModal);
+            if(modalCloseBtn) modalCloseBtn.addEventListener('click', closePreviewModal);
+            if(previewModal) previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreviewModal(); });
+            if(modalCopy) modalCopy.addEventListener('click', () => {
+                const textToCopy = previewContent.value; // Get value from textarea
+                copyToClipboard(textToCopy);
+                incrementUsageStat('blurbModalCopies');
+                showCopyNotification(modalCopy, 'Copied!', 'COPY');
+            });
+            
+            // Settings Modal
+            if(settingsModalClose) settingsModalClose.addEventListener('click', closeSettingsModal);
+            if(settingsModal) settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); });
+            if(hideBlurbsToggle) hideBlurbsToggle.addEventListener('change', function() {
+                const settings = loadSettings();
+                settings.hideBlurbs = this.checked;
+                saveSettings(settings);
+                applyCurrentSettings();
+            });
+
+
+            // Favorites Section
+            if(clearAllFavoritesBtn) clearAllFavoritesBtn.addEventListener('click', handleClearAllFavorites);
+            if(undoClearFavoritesBtn) undoClearFavoritesBtn.addEventListener('click', handleUndoClearFavorites);
+
+            // Case Notes
+            if(notesHeader) notesHeader.addEventListener('click', (e) => {
+                if (e.target.closest('.case-notes-actions') && !e.target.closest('#toggle-notes')) return;
+                toggleNotesCollapse();
+            });
+            if(toggleNotesBtn) toggleNotesBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleNotesCollapse(); });
+            if(resetNotesBtn) resetNotesBtn.addEventListener('click', (e) => { e.stopPropagation(); handleResetNotes(); });
+            if(undoNotesBtn) undoNotesBtn.addEventListener('click', (e) => { e.stopPropagation(); handleUndoNotes(); });
+            noteFields.forEach(field => {
+                const savedValue = localStorage.getItem('notes_' + field.id);
+                if (savedValue) field.value = savedValue;
+                adjustTextareaHeight(field);
+                previousNotesValues[field.id] = field.value;
+                field.addEventListener('input', function() {
+                    adjustTextareaHeight(this);
+                    localStorage.setItem('notes_' + this.id, this.value);
+                });
+            });
+            if(copyNotesBtn) copyNotesBtn.addEventListener('click', () => {
+                const { notesText } = formatNotesForCopy(false);
+                copyToClipboard(notesText);
+                incrementUsageStat('notesCopies');
+                showCopyNotification(copyNotesBtn, 'Copied!', 'Copy Notes');
+            });
+            if(reviewNotesBtn) reviewNotesBtn.addEventListener('click', showNotesReviewModal);
+            
+            // Notes Review Modal
+            if(notesModalClose) notesModalClose.addEventListener('click', closeNotesReviewModal);
+            if(notesModalCloseBtn) notesModalCloseBtn.addEventListener('click', closeNotesReviewModal);
+            if(notesReviewModal) notesReviewModal.addEventListener('click', (e) => { if (e.target === notesReviewModal) closeNotesReviewModal(); });
+            if(notesModalCopy) notesModalCopy.addEventListener('click', () => {
+                const { notesText, summaryText } = formatNotesForCopy(true);
+                let fullTextToCopy = notesText;
+                if (summaryText && summaryText !== 'No summary generated yet.' && !summaryText.startsWith('Generating') && !summaryText.startsWith('Failed')) {
+                    fullTextToCopy += `\n\nSUMMARY\n========\n${summaryText}`;
+                }
+                incrementUsageStat('notesReviewModalCopies');
+                copyToClipboard(fullTextToCopy);
+                showCopyNotification(notesModalCopy, 'Copied All!', 'COPY ALL');
+            });
+            if(summarizeNotesBtn) summarizeNotesBtn.addEventListener('click', summarizeCaseNotes);
+
+            // AI Chat
+            if(aiChatHeader) aiChatHeader.addEventListener('click', (e) => {
+                if (e.target.closest('.ai-chat-actions') && !e.target.closest('#toggle-ai-chat')) return;
+                toggleAiChatCollapse();
+            });
+            if(toggleAiChatBtn) toggleAiChatBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleAiChatCollapse(); });
+            if(driverMailInput) {
+                driverMailInput.addEventListener('input', function() {
+                    adjustTextareaHeight(this);
+                });
+            }
+            if(analyzeMailBtn) analyzeMailBtn.addEventListener('click', analyzeDriverMail);
+            if(clearAiChatBtn) clearAiChatBtn.addEventListener('click', clearAiChat);
+
+            // Admin Login
+            if(adminLoginLink) adminLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(adminLoginModal) adminLoginModal.style.display = 'flex';
+                if(adminPasswordInput) adminPasswordInput.value = '';
+                if(loginError) loginError.style.display = 'none';
+            });
+            if(adminLoginClose) adminLoginClose.addEventListener('click', () => { if(adminLoginModal) adminLoginModal.style.display = 'none'; });
+            if(adminLoginBtn) adminLoginBtn.addEventListener('click', handleAdminLogin);
+            if(adminPasswordInput) adminPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdminLogin(); }});
+            
+            // Admin Panel
+            if(adminPanelClose) adminPanelClose.addEventListener('click', () => { if(adminPanelModal) adminPanelModal.style.display = 'none'; });
+            if(adminLanguageSelector) adminLanguageSelector.addEventListener('change', handleAdminLanguageChange);
+            adminNavButtons.forEach(btn => btn.addEventListener('click', function() { showAdminSection(this.getAttribute('data-section')); }));
+            
+            // Admin Blurbs
+            if(adminBlurbSearch) adminBlurbSearch.addEventListener('input', function() { filterAdminBlurbs(this.value.toLowerCase().trim()); });
+            if(addBlurbBtn) addBlurbBtn.addEventListener('click', openAddBlurbForm);
+            if(cancelBlurbBtn) cancelBlurbBtn.addEventListener('click', () => { if(blurbForm) blurbForm.style.display = 'none'; });
+            if(saveBlurbBtn) saveBlurbBtn.addEventListener('click', saveAdminBlurb);
+            
+            // Admin Categories
+            if(adminCategorySearch) adminCategorySearch.addEventListener('input', function() { filterAdminMainCategories(this.value.toLowerCase().trim()); });
+            if(adminSubCategorySearch) adminSubCategorySearch.addEventListener('input', function() { filterAdminSubCategories(this.value.toLowerCase().trim()); });
+            if(addCategoryBtn) addCategoryBtn.addEventListener('click', openAddCategoryForm);
+            if(addSubcategoryBtn) addSubcategoryBtn.addEventListener('click', openAddSubcategoryForm);
+            if(cancelCategoryBtn) cancelCategoryBtn.addEventListener('click', () => { if(categoryForm) categoryForm.style.display = 'none'; });
+            if(saveCategoryBtn) saveCategoryBtn.addEventListener('click', saveAdminCategory);
+            
+            // Admin Languages
+            if(addNewLangBtn) addNewLangBtn.addEventListener('click', handleAddNewLanguage);
+
+            // Admin Export/Import
+            if(exportDataBtn) exportDataBtn.addEventListener('click', handleExportData);
+            if(importDataBtn) importDataBtn.addEventListener('click', () => { 
+                if(importForm) importForm.style.display = 'block'; 
+                if(importDataTextarea) importDataTextarea.value = ''; 
+                if(exportDataContainer) exportDataContainer.style.display = 'none';
+            });
+            if(cancelImportBtn) cancelImportBtn.addEventListener('click', () => { if(importForm) importForm.style.display = 'none'; });
+            if(confirmImportBtn) confirmImportBtn.addEventListener('click', handleImportData);
+
+            // Admin Panel Global Event Delegation for Edit/Delete buttons
+            const adminPanelContent = document.querySelector('#admin-panel-modal .modal-content');
+            if (adminPanelContent) {
+                adminPanelContent.addEventListener('click', handleAdminActionDelegation);
+            }
+            // Show/Hide All buttons in Admin
+            document.querySelectorAll('.show-all-btn, .hide-all-btn').forEach(btn => {
+                btn.addEventListener('click', handleAdminShowHideAll);
+            });
+        }
+        
+        // --- Language Switching and UI Update ---
+        function handleAdminLanguageChange() {
+            currentAdminEditingLang = adminLanguageSelector.value;
+            if (adminEditingLangBlurbsSpan) adminEditingLangBlurbsSpan.textContent = currentAdminEditingLang.toUpperCase();
+            if (adminEditingLangCategoriesSpan) adminEditingLangCategoriesSpan.textContent = currentAdminEditingLang.toUpperCase();
+            // Refresh the content of the currently active admin section
+            const activeAdminSection = document.querySelector('.admin-section[style*="block"]');
+            if (activeAdminSection) {
+                if (activeAdminSection.id === 'admin-blurbs') {
+                    populateAdminBlurbList();
+                    if (blurbForm.style.display === 'block') populateCategoryOptionsForAdminBlurbForm(); // Refresh dropdowns if form is open
+                } else if (activeAdminSection.id === 'admin-categories') {
+                    populateAdminCategoryLists();
+                     if (categoryForm.style.display === 'block') populateParentCategoryOptionsForAdminForm();
+                }
+            }
+        }
+
+        // --- THEME --- (Already in DOMContentLoaded)
+
+        // --- SEARCH & CATEGORY UI ---
+        let currentSearchTerm = ''; // Added to global scope for access
+        let currentSuggestionIndex = -1; // For keyboard navigation
+
+        function handleSearchInput() {
+            const searchTermVal = searchInput.value.toLowerCase().trim();
+            currentSearchTerm = searchTermVal;
+            if (searchTermVal.length < 1) {
+                if(searchSuggestions) searchSuggestions.style.display = 'none';
+                renderBlurbs(getCurrentBlurbs());
+                return;
+            }
+            const suggestions = generateSearchSuggestions(searchTermVal, currentLanguage);
+            if (suggestions.length > 0) {
+                renderSearchSuggestions(suggestions, searchTermVal);
+                if(searchSuggestions) searchSuggestions.style.display = 'block';
+            } else {
+                if(searchSuggestions) searchSuggestions.style.display = 'none';
+            }
+        }
+        function handleSearchKeydown(event) {
+            if (!searchSuggestions || searchSuggestions.style.display === 'none') return;
+            const items = searchSuggestions.querySelectorAll('.suggestion-item');
+            if (items.length === 0) return;
+            switch(event.key) {
+                case 'ArrowDown': event.preventDefault(); currentSuggestionIndex = (currentSuggestionIndex + 1) % items.length; updateSelectedSuggestion(items); break;
+                case 'ArrowUp': event.preventDefault(); currentSuggestionIndex = (currentSuggestionIndex - 1 + items.length) % items.length; updateSelectedSuggestion(items); break;
+                case 'Enter': event.preventDefault(); if (items[currentSuggestionIndex]) items[currentSuggestionIndex].click(); else performSearch(); break;
+                case 'Escape': searchSuggestions.style.display = 'none'; currentSuggestionIndex = -1; break;
+            }
+        }
+        function updateSelectedSuggestion(items) {
+            items.forEach((item, idx) => item.classList.toggle('suggestion-selected', idx === currentSuggestionIndex));
+            if (items[currentSuggestionIndex]) items[currentSuggestionIndex].scrollIntoView({ block: 'nearest' });
+        }
+        function performSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            currentSearchTerm = searchTerm;
+            if(searchSuggestions) searchSuggestions.style.display = 'none';
+            currentSuggestionIndex = -1;
+
+            const currentBlurbs = getCurrentBlurbs();
+            const currentCats = getCurrentCategoryStructure();
+
+            if (searchTerm === '') {
+                renderBlurbs(currentBlurbs); return;
+            }
+            const filtered = currentBlurbs.filter(blurb => 
+                blurb.title.toLowerCase().includes(searchTerm) || 
+                blurb.content.toLowerCase().includes(searchTerm) ||
+                (blurb.tags && blurb.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+                (currentCats[blurb.mainCategory] && currentCats[blurb.mainCategory].name.toLowerCase().includes(searchTerm)) ||
+                (currentCats[blurb.mainCategory] && currentCats[blurb.mainCategory].subcategories.find(s => s.id === blurb.category)?.name.toLowerCase().includes(searchTerm))
+            );
+            renderBlurbs(filtered, searchTerm);
+        }
+        function generateSearchSuggestions(searchTerm, lang) {
+            const results = [];
+            const added = new Set();
+            const blurbsForLang = appContentByLang[lang].blurbs;
+            const catsForLang = appContentByLang[lang].categoryStructure;
+
+            for (const catKey in catsForLang) {
+                if (catsForLang[catKey].name.toLowerCase().includes(searchTerm) && !added.has(`cat-${catKey}`)) {
+                    results.push({ text: catsForLang[catKey].name, type: 'category', categoryId: catKey });
+                    added.add(`cat-${catKey}`);
+                }
+                catsForLang[catKey].subcategories.forEach(sub => {
+                    if (sub.name.toLowerCase().includes(searchTerm) && !added.has(`sub-${sub.id}`)) {
+                        results.push({ text: `${sub.name} (${catsForLang[catKey].name})`, type: 'subcategory', parentCategory: catKey, categoryId: sub.id });
+                        added.add(`sub-${sub.id}`);
+                    }
+                });
+            }
+            blurbsForLang.forEach(b => {
+                if (b.title.toLowerCase().includes(searchTerm) && !added.has(`blurb-${b.id}`)) {
+                    results.push({ text: b.title, type: 'title', id: b.id });
+                    added.add(`blurb-${b.id}`);
+                }
+                if (b.tags) b.tags.forEach(tag => {
+                    if (tag.toLowerCase().includes(searchTerm) && !added.has(`tag-${tag.toLowerCase()}`)) {
+                        results.push({ text: tag, type: 'tag', tagValue: tag });
+                        added.add(`tag-${tag.toLowerCase()}`);
+                    }
+                });
+            });
+            return results.slice(0, 10);
+        }
+        function renderSearchSuggestions(suggestions, searchTerm) {
+            if(!searchSuggestions) return;
+            searchSuggestions.innerHTML = '';
+            currentSuggestionIndex = -1;
+            suggestions.forEach((sug, idx) => {
+                const item = document.createElement('div');
+                item.classList.add('suggestion-item');
+                if (sug.type === 'category') item.classList.add('suggestion-category');
+                if (sug.type === 'subcategory') item.classList.add('suggestion-subcategory');
+                item.addEventListener('mouseenter', () => { currentSuggestionIndex = idx; updateSelectedSuggestion(searchSuggestions.querySelectorAll('.suggestion-item')); });
+                
+                let icon = '';
+                if (sug.type === 'category') icon = '<i class="fas fa-folder"></i> ';
+                else if (sug.type === 'subcategory') icon = '<i class="fas fa-folder-open"></i> ';
+                else if (sug.type === 'title') icon = '<i class="fas fa-file-alt"></i> ';
+                else if (sug.type === 'tag') icon = '<i class="fas fa-tag"></i> ';
+                item.innerHTML = icon + highlightMatch(sug.text, searchTerm);
+
+                item.addEventListener('click', () => {
+                    if(searchInput) searchInput.value = sug.type === 'tag' ? sug.tagValue : sug.text.replace(/ \(.*\)/, '');
+                    if (sug.type === 'category') selectMainCategory(sug.categoryId);
+                    else if (sug.type === 'subcategory') { selectMainCategory(sug.parentCategory); selectSubcategory(sug.categoryId); }
+                    else if (sug.type === 'tag') performTagSearch(sug.tagValue);
+                    else { performSearch(); if (sug.id) highlightAndScrollToBlurb(sug.id); }
+                    if(searchSuggestions) searchSuggestions.style.display = 'none';
+                });
+                searchSuggestions.appendChild(item);
+            });
+        }
+        function highlightMatch(text, term) { 
+            if (!term) return text;
+            const lowerText = text.toLowerCase();
+            const lowerTerm = term.toLowerCase();
+            let startIndex = 0;
+            let result = '';
+            while(startIndex < text.length) {
+                const index = lowerText.indexOf(lowerTerm, startIndex);
+                if (index === -1) {
+                    result += text.substring(startIndex);
+                    break;
+                }
+                result += text.substring(startIndex, index);
+                result += '<span class="suggestion-highlight">' + text.substring(index, index + term.length) + '</span>';
+                startIndex = index + term.length;
+            }
+            return result;
+        }
+        function highlightAndScrollToBlurb(blurbId) { 
+            setTimeout(() => {
+                const blurbElement = document.querySelector(`.blurb-card[data-id="${blurbId}"]`);
+                if (blurbElement) {
+                    blurbElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    blurbElement.classList.add('highlight-card');
+                    setTimeout(() => blurbElement.classList.remove('highlight-card'), 2000);
+                }
+            }, 100);
+        }
+        function performTagSearch(tagValue) { 
+            currentSearchTerm = tagValue; 
+            if(searchInput) searchInput.value = tagValue; 
+            const blurbsForLang = getCurrentBlurbs();
+            const filteredBlurbs = blurbsForLang.filter(blurb => 
+                blurb.tags && blurb.tags.some(tag => tag.toLowerCase() === tagValue.toLowerCase())
+            );
+            renderBlurbs(filteredBlurbs, tagValue);
+        }
+
+        function initializeCategoryUI() {
+            if (!mainCategoriesContainer || !subcategoryContainer) return;
+            const currentCats = getCurrentCategoryStructure();
+            mainCategoriesContainer.innerHTML = '<button class="category-btn active" data-category="all">All</button>';
+            subcategoryContainer.innerHTML = '';
+
+            Object.entries(currentCats).forEach(([catId, category]) => {
+                const catBtn = document.createElement('button');
+                catBtn.className = 'category-btn';
+                catBtn.dataset.category = catId;
+                catBtn.textContent = category.name;
+                mainCategoriesContainer.appendChild(catBtn);
+
+                const subGroup = document.createElement('div');
+                subGroup.className = 'subcategory-group';
+                subGroup.id = `subcategories-${catId}-${currentLanguage}`; // Language specific ID
+                subGroup.style.display = 'none';
+                if (category.subcategories) {
+                    category.subcategories.forEach(sub => {
+                        const subBtn = document.createElement('button');
+                        subBtn.className = 'subcategory-btn';
+                        subBtn.dataset.subcategory = sub.id;
+                        subBtn.textContent = sub.name;
+                        subGroup.appendChild(subBtn);
+                    });
+                }
+                subcategoryContainer.appendChild(subGroup);
+            });
+            attachCategoryEventListeners();
+        }
+        function attachCategoryEventListeners() {
+            document.querySelectorAll('.main-categories .category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.main-categories .category-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const cat = this.dataset.category;
+                    document.querySelectorAll('.subcategory-group').forEach(g => g.style.display = 'none');
+                    document.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+                    if (cat === 'all') renderBlurbs(getCurrentBlurbs());
+                    else {
+                        const subGroup = document.getElementById(`subcategories-${cat}-${currentLanguage}`);
+                        if (subGroup) subGroup.style.display = 'flex';
+                        renderBlurbs(getCurrentBlurbs().filter(b => b.mainCategory === cat));
+                    }
+                    if(searchInput) searchInput.value = ''; currentSearchTerm = '';
+                });
+            });
+            document.querySelectorAll('.subcategory-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const parentGroup = this.closest('.subcategory-group');
+                    parentGroup.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const subcat = this.dataset.subcategory;
+                    const mainCat = parentGroup.id.split('-')[1]; // Assumes ID format subcategories-mainCatId-lang
+                    renderBlurbs(getCurrentBlurbs().filter(b => b.category === subcat && b.mainCategory === mainCat));
+                    if(searchInput) searchInput.value = ''; currentSearchTerm = '';
+                });
+            });
+        }
+        function selectMainCategory(categoryId) { 
+            const mainCatButtons = mainCategoriesContainer.querySelectorAll('.category-btn');
+            mainCatButtons.forEach(btn => {
+                if (btn.getAttribute('data-category') === categoryId) btn.click();
+            });
+        }
+        function selectSubcategory(subcategoryId) { 
+            const subCatButtons = subcategoryContainer.querySelectorAll('.subcategory-btn');
+            subCatButtons.forEach(btn => {
+                if (btn.getAttribute('data-subcategory') === subcategoryId) btn.click();
+            });
+        }
+
+        // --- BLURB RENDERING & ACTIONS ---
+        let originalBlurbContentForLLM = ""; // Used by preview modal for LLM actions
+
+        function highlightSearchTermInContent(content, searchTerm) {
+            if (!searchTerm || searchTerm.trim() === "") return content;
+            try {
+                // Escape special characters in searchTerm for regex
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+                return content.replace(regex, '<span class="search-highlight">$1</span>');
+            } catch (e) {
+                console.error("Regex error in highlightSearchTermInContent:", e);
+                return content; // Return original content on error
+            }
+        }
+
+        function renderBlurbs(blurbsToRender, searchTerm = currentSearchTerm) {
+            if (!blurbContainer) return;
+            blurbContainer.innerHTML = '';
+
+            if (blurbsToRender.length === 0) {
+                blurbContainer.innerHTML = '<p class="no-results">No blurbs found.</p>'; return;
+            }
+            blurbsToRender.forEach(blurb => {
+                const card = document.createElement('div');
+                card.className = 'blurb-card'; card.dataset.id = blurb.id;
+                let content = replacePlaceholders(blurb.content, false);
+                content = highlightSearchTermInContent(content, searchTerm);
+                const tags = blurb.tags ? blurb.tags.map(t => `<span class="tag">#${highlightSearchTermInContent(t, searchTerm)}</span>`).join('') : '';
+                const title = highlightSearchTermInContent(blurb.title, searchTerm);
+
+                card.innerHTML = `
+                    <div class="blurb-header">
+                        <span class="blurb-title">${title}</span>
+                        <button class="favorite-btn ${blurb.isFavorite ? 'active' : ''}" data-id="${blurb.id}"><i class="fas fa-star"></i></button>
+                    </div>
+                    <div class="blurb-content">${content}</div>
+                    <div class="blurb-tags">${tags}</div>
+                    <div class="blurb-actions">
+                        <button class="action-btn copy-btn">COPY</button>
+                        <button class="action-btn preview-btn">PREVIEW</button>
+                    </div>`;
+                blurbContainer.appendChild(card);
+
+                card.querySelector('.favorite-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(blurb.id);
+                });
+                card.querySelector('.copy-btn').addEventListener('click', (e) => {
+                    const fullContent = replacePlaceholders(blurb.content, true);
+                    copyToClipboard(fullContent.replace(/<br\s*\/?>/gi, '\n'));
+                    incrementUsageStat('blurbCardCopies');
+                    showCopyNotification(e.target, 'Copied!', 'COPY');
+                });
+                card.querySelector('.preview-btn').addEventListener('click', () => {
+                    const previewHTML = replacePlaceholders(blurb.content, true);
+                    originalBlurbContentForLLM = replacePlaceholders(blurb.content, false).replace(/<br\s*\/?>/gi, '\n'); // For LLM, use plain text
+                    showPreviewModal(blurb.title, previewHTML);
+                });
+            });
+        }
+        function showPreviewModal(title, htmlContent) {
+            if (!previewModal || !previewContent) return;
+            previewModal.querySelector('.modal-title').textContent = title;
+            // Convert <br> to \n for textarea value
+            incrementUsageStat('blurbPreviews');
+            previewContent.value = htmlContent.replace(/<br\s*\/?>/gi, '\n');
+            previewModal.style.display = 'flex';
+        }
+        function closePreviewModal() { if(previewModal) previewModal.style.display = 'none'; }        
+        
+        function replacePlaceholders(content, includeGreeting) {
+            let pContent = content;
+            // The driver and agent name placeholders are no longer dynamically replaced.
+            // If you want to remove the placeholder text like "[driver name]" and "[agent name]"
+            // from the blurbs themselves, you would need to do that in the blurb data or add:
+            // pContent = pContent.replace(/\[driver(?: name)?\]/gi, ""); // Example: replace with empty string
+            // pContent = pContent.replace(/\[agent(?: name)?\]|\[your name\]/gi, ""); // Example: replace with empty string
+
+            if (includeGreeting) {
+                // The greeting "Hi [driver name], This is [agent name]..." is no longer automatically prepended.
+                // If any conditional formatting based on 'includeGreeting' is needed in the future, it can be added here.
+            }
+            return pContent;
+        }
+        
+        function toggleFavorite(id) {
+            const blurbsForLang = getCurrentBlurbs();
+            const blurb = blurbsForLang.find(b => b.id === id);
+            if (blurb) {
+                blurb.isFavorite = !blurb.isFavorite;
+                saveDataToLocalStorage();
+                
+                // Update the star on the card in the main grid
+                const cardStar = document.querySelector(`.blurb-card[data-id="${id}"] .favorite-btn`);
+                if (cardStar) {
+                    cardStar.classList.toggle('active', blurb.isFavorite);
+                }
+                
+                // Re-render the favorites list
+                renderFavorites();
+            }
+        }
+        
+        function renderFavorites() {
+            if (!favoritesList) return;
+            const favBlurbs = getCurrentBlurbs().filter(b => b.isFavorite);
+            favoritesList.innerHTML = favBlurbs.length === 0 ? '<p style="color: var(--secondary-text-color); font-size: 14px; text-align: center;">No favorites yet.</p>' : '';
+            favBlurbs.forEach(blurb => {
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.dataset.id = blurb.id;
+                item.innerHTML = `
+                    <span class="favorite-title" title="Preview '${blurb.title}'">${blurb.title}</span>
+                    <div class="favorite-actions">
+                        <button class="remove-fav-btn" title="Remove from favorites"><i class="fas fa-times"></i></button>
+                    </div>`;
+                favoritesList.appendChild(item);
+                
+                item.querySelector('.favorite-title').addEventListener('click', () => {
+                    highlightAndScrollToBlurb(blurb.id);
+                });
+
+                item.querySelector('.remove-fav-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(blurb.id);
+                });
+            });
+        }
+        
+        function handleClearAllFavorites() {
+            const favBlurbs = getCurrentBlurbs().filter(b => b.isFavorite);
+            if (favBlurbs.length === 0) return;
+
+            showConfirmDialog("Are you sure you want to clear all favorites?", () => {
+                lastClearedFavoriteIds = favBlurbs.map(b => b.id);
+                
+                getCurrentBlurbs().forEach(blurb => {
+                    if (blurb.isFavorite) {
+                        blurb.isFavorite = false;
+                    }
+                });
+                
+                saveDataToLocalStorage();
+                renderBlurbs(getCurrentBlurbs()); // Re-render blurbs to update all stars
+                renderFavorites();
+                
+                if(undoClearFavoritesBtn) undoClearFavoritesBtn.disabled = false;
+            });
+        }
+
+        function handleUndoClearFavorites() {
+            if (lastClearedFavoriteIds.length === 0) return;
+
+            getCurrentBlurbs().forEach(blurb => {
+                if (lastClearedFavoriteIds.includes(blurb.id)) {
+                    blurb.isFavorite = true;
+                }
+            });
+
+            saveDataToLocalStorage();
+            renderBlurbs(getCurrentBlurbs());
+            renderFavorites();
+
+            lastClearedFavoriteIds = [];
+            if(undoClearFavoritesBtn) undoClearFavoritesBtn.disabled = true;
+        }
+
+        
+        // --- LLM Processing ---
+        async function processBlurbWithLLM(actionType, text, targetLanguage = '') {
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+            const API_KEY = "AIzaSyAXknf6YJ56tA_sIsG7aj4L2ugQC1nQsV8"; // Provided by environment
+
+            let prompt = '';
+            let buttonToUpdate = null;
+            let finalTextForButton = '';
+
+            switch (actionType) {
+                case 'analyzeDriverMail':
+                    prompt = `Analyze the following driver's email and identify the core request or issue the driver is trying to communicate. Be concise and to the point. Email: "${text}"`;
+                    buttonToUpdate = analyzeMailBtn;
+                    incrementUsageStat('llmDriverMailAnalysisAttempted');
+                    finalTextForButton = 'Analyze Mail ✨';
+                    break;
+                default: console.error("Unknown LLM action:", actionType); return;
+            }
+
+            if (buttonToUpdate) { buttonToUpdate.disabled = true; buttonToUpdate.textContent = 'Processing...'; }
+
+            try {
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(`API error: ${response.status} - ${errData.error?.message || errData.message}`);
+                }
+                const result = await response.json();
+                const processedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (processedText) {
+                    if(actionType === 'analyzeDriverMail' && aiResponseOutput) {
+                        aiResponseOutput.value = processedText;
+                        adjustTextareaHeight(aiResponseOutput);
+                        incrementUsageStat('llmDriverMailAnalysisSucceeded');
+                    } else if(previewContent) {
+                        previewContent.value = processedText; // Update textarea value
+                    }
+                    if (buttonToUpdate) showCopyNotification(buttonToUpdate, `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}d!`, finalTextForButton);
+                } else { throw new Error("LLM: Unexpected response structure."); }
+            } catch (error) {
+                console.error(`${actionType} failed:`, error);
+                if (actionType === 'analyzeDriverMail' && aiResponseOutput) {
+                    aiResponseOutput.value = `Error: ${error.message}`;
+                    adjustTextareaHeight(aiResponseOutput);
+                } else if (previewContent) {
+                    previewContent.value = `Error: ${error.message}`; // Update textarea value with error
+                }
+                showConfirmDialog(`Failed to ${actionType}. Error: ${error.message}.`, () => {}, true);
+                if (buttonToUpdate) buttonToUpdate.textContent = finalTextForButton; // Reset on error
+            } finally {
+                if (buttonToUpdate) {
+                    buttonToUpdate.disabled = false;
+                    if (buttonToUpdate.textContent === 'Processing...') buttonToUpdate.textContent = finalTextForButton;
+                }
+            }
+        }
+
+        // --- Clipboard & Notifications --- 
+        function copyToClipboard(text) { 
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    console.warn('Async clipboard copy failed, falling back.', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+        function fallbackCopyToClipboard(text) { 
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; 
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try { document.execCommand('copy'); } 
+            catch (err) { console.error('Fallback copy failed:', err); showConfirmDialog("Failed to copy.", () => {}, true); }
+            document.body.removeChild(textarea);
+        }
+        function showCopyNotification(button, message = 'Copied!', finalText) { 
+            if (!button) return;
+            const originalText = button.textContent; 
+            button.textContent = message; 
+            setTimeout(() => {
+                if (button) button.textContent = (finalText !== undefined) ? finalText : originalText;
+            }, 2000);
+        }
+        
+        // --- Settings Modal ---
+        function showSettingsModal() {
+            if (settingsModal) settingsModal.style.display = 'flex';
+        }
+        function closeSettingsModal() {
+            if (settingsModal) settingsModal.style.display = 'none';
+        }
+
+        // --- CASE NOTES --- 
+        let previousNotesValues = {}; // For undo
+        function toggleNotesCollapse() { 
+            if(!notesBox || !toggleNotesBtn) return;
+            notesBox.classList.toggle('collapsed');
+            const isCollapsed = notesBox.classList.contains('collapsed');
+            localStorage.setItem('notes_collapsed', isCollapsed.toString());
+            toggleNotesBtn.innerHTML = isCollapsed ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+        }
+        function adjustTextareaHeight(textarea) { 
+            if(!textarea) return;
+            textarea.style.height = 'auto'; 
+            textarea.style.height = (textarea.scrollHeight) + 'px'; 
+        }
+        function handleResetNotes() { 
+            showConfirmDialog("Are you sure you want to clear all Flex Tier1 fields?", () => {
+                noteFields.forEach(field => {
+                    previousNotesValues[field.id] = field.value; 
+                    field.value = '';
+                    adjustTextareaHeight(field);
+                    localStorage.removeItem('notes_' + field.id);
+                });
+                if(undoNotesBtn) undoNotesBtn.disabled = false; 
+            });
+        }
+        function handleUndoNotes() { 
+            let restoredSomething = false;
+            noteFields.forEach(field => {
+                if (field.value !== previousNotesValues[field.id]) restoredSomething = true;
+                field.value = previousNotesValues[field.id] || ''; 
+                adjustTextareaHeight(field);
+                localStorage.setItem('notes_' + field.id, field.value);
+            });
+            if (restoredSomething && undoNotesBtn) undoNotesBtn.disabled = true; 
+        }
+  function formatNotesForCopy(includeSummary = false) {
+    const fields = {
+        'driver-status': "Driver's status",
+        'driver-issue': 'Issue',
+        'resolution-notes': 'Resolution/Notes',
+        'ticket-id': 'Ticket if applicable',
+        'tracking-id': 'Tracking/Order ID',
+        'exemption-message': 'Exemption Message'
+    };
+    let notesText = 'Flex Tier1\n===========\n';
+    Object.entries(fields).forEach(([id, label], index) => {
+        const field = document.getElementById(id);
+        const value = field ? field.value.trim() : '';
+        notesText += `${label}: ${value || 'NA'}${index === Object.entries(fields).length - 1 ? '' : '\n'}`;
+    });
+    let summaryText = '';
+    if (includeSummary && generatedNotesSummary) summaryText = generatedNotesSummary.textContent.trim();
+    return { notesText, summaryText };
+}
+        function showNotesReviewModal() { 
+            const fields = {
+                'driver-status': "Driver's status", 'driver-issue': 'Issue', 'resolution-notes': 'Resolution/Notes',
+                'ticket-id': 'Ticket if applicable', 'tracking-id': 'Tracking/Order ID', 'exemption-message': 'Exemption Message'
+            };
+            let reviewHTML = '';
+            Object.entries(fields).forEach(([id, label]) => {
+                const field = document.getElementById(id);
+                const text = field ? field.value.trim() : '';
+                reviewHTML += `<div class="notes-review-item"><div class="notes-review-label">${label}</div><div class="notes-review-text">${text || '<span class="notes-review-empty">(Not provided)</span>'}</div></div>`;
+            });
+            if(notesReviewContentMain) notesReviewContentMain.innerHTML = reviewHTML;
+            if(notesSummarySection) notesSummarySection.style.display = 'none';
+            if(generatedNotesSummary) generatedNotesSummary.textContent = 'No summary generated yet.';
+            incrementUsageStat('notesReviewsOpened');
+            if(notesReviewModal) notesReviewModal.style.display = 'flex';
+        }
+        function closeNotesReviewModal() { 
+             if(notesReviewModal) notesReviewModal.style.display = 'none';
+             if(notesSummarySection) notesSummarySection.style.display = 'none'; 
+             if(generatedNotesSummary) generatedNotesSummary.textContent = 'No summary generated yet.';
+        }
+        async function summarizeCaseNotes() { 
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+            const API_KEY = "AIzaSyAXknf6YJ56tA_sIsG7aj4L2ugQC1nQsV8"; 
+            const { notesText } = formatNotesForCopy(false);
+            const isNotesEmpty = Object.values(previousNotesValues).every(val => val.trim() === "") && Array.from(noteFields).every(field => field.value.trim() === "");
+            if (isNotesEmpty || notesText.replace(/CASE NOTES\n===========\n\n(?:(?:.*?): \(Not provided\)\n\n)*/, '', '').trim() === '') {
+                showConfirmDialog("No notes to summarize.", () => {}, true); return;
+            }
+            incrementUsageStat('notesSummariesAttempted');
+            if(summarizeNotesBtn) { summarizeNotesBtn.disabled = true; summarizeNotesBtn.textContent = 'Summarizing...'; }
+            if(notesSummarySection) notesSummarySection.style.display = 'block';
+            if(generatedNotesSummary) generatedNotesSummary.textContent = 'Generating summary...';
+            try {
+                const prompt = `Summarize these case notes: ${notesText}`;
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(`API error: ${response.status} - ${errData.error?.message || errData.message}`);
+                }
+                const result = await response.json();
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    if(generatedNotesSummary) generatedNotesSummary.textContent = result.candidates[0].content.parts[0].text;
+                    incrementUsageStat('notesSummariesSucceeded');
+                } else { throw new Error("LLM: Unexpected summary response."); }
+            } catch (error) {
+                console.error("Notes summarization failed:", error);
+                if(generatedNotesSummary) generatedNotesSummary.textContent = 'Failed to summarize.';
+                showConfirmDialog(`Failed to summarize. Error: ${error.message}`, () => {}, true);
+            } finally {
+                if(summarizeNotesBtn) { summarizeNotesBtn.disabled = false; summarizeNotesBtn.textContent = 'Summarize All Notes ✨'; }
+            }
+        }
+
+        // --- AI Chat Functions ---
+        function toggleAiChatCollapse() {
+            if(!aiChatBox || !toggleAiChatBtn) return;
+            aiChatBox.classList.toggle('collapsed');
+            const isCollapsed = aiChatBox.classList.contains('collapsed');
+            toggleAiChatBtn.innerHTML = isCollapsed ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+        }
+
+        async function analyzeDriverMail() {
+            if (!driverMailInput || !aiResponseOutput) return;
+            const mailContent = driverMailInput.value.trim();
+            if (!mailContent) {
+                showConfirmDialog("Please paste the driver's email content to analyze.", () => {}, true);
+                return;
+            }
+            aiResponseOutput.value = 'Analyzing...';
+            adjustTextareaHeight(aiResponseOutput);
+            await processBlurbWithLLM('analyzeDriverMail', mailContent);
+        }
+
+        function clearAiChat() {
+            if (driverMailInput) driverMailInput.value = '';
+            if (aiResponseOutput) aiResponseOutput.value = '';
+            adjustTextareaHeight(driverMailInput);
+            adjustTextareaHeight(aiResponseOutput);
+        }
+
+        // --- ADMIN PANEL ---
+        const ADMIN_PASSWORD = "123"; 
+
+        function handleAdminLogin() {
+            if (adminPasswordInput && adminPasswordInput.value === ADMIN_PASSWORD) {
+                if(adminLoginModal) adminLoginModal.style.display = 'none';
+                if(adminPanelModal) adminPanelModal.style.display = 'flex';
+                currentAdminEditingLang = mainLanguageSelector ? mainLanguageSelector.value : 'en'; // Sync with main UI lang initially
+                if(adminLanguageSelector) adminLanguageSelector.value = currentAdminEditingLang;
+                if (adminEditingLangBlurbsSpan) adminEditingLangBlurbsSpan.textContent = currentAdminEditingLang.toUpperCase();
+                if (adminEditingLangCategoriesSpan) adminEditingLangCategoriesSpan.textContent = currentAdminEditingLang.toUpperCase();
+                
+                populateAdminLanguageSelector(); // Populate selector with currently available languages
+                showAdminSection('blurbs'); // Default to blurbs section
+                refreshAdminSectionContent(); // Refresh content for the selected admin language
+            } else {
+                if(loginError) loginError.style.display = 'block';
+            }
+        }
+        
+        function populateAdminLanguageSelector() {
+            if (!adminLanguageSelector) return;
+            adminLanguageSelector.innerHTML = '';
+             Object.keys(appContentByLang).forEach(langCode => {
+                const langName = appContentByLang[langCode].languageName || langCode.toUpperCase();
+                const option = document.createElement('option');
+                option.value = langCode;
+                option.textContent = langName;
+                adminLanguageSelector.appendChild(option);
+            });
+            adminLanguageSelector.value = currentAdminEditingLang; // Set to current admin editing lang
+        }
+
+        function showAdminSection(sectionId) {
+            adminNavButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-section') === sectionId));
+            adminSections.forEach(section => {
+                if(section) section.style.display = section.id === `admin-${sectionId}` ? 'block' : 'none';
+            });
+            if (sectionId === 'blurbs' || sectionId === 'categories') {
+                 if (adminEditingLangBlurbsSpan) adminEditingLangBlurbsSpan.textContent = currentAdminEditingLang.toUpperCase();
+                 if (adminEditingLangCategoriesSpan) adminEditingLangCategoriesSpan.textContent = currentAdminEditingLang.toUpperCase();
+            }
+            if (sectionId === 'languages') {
+                populateExistingLanguagesList();
+            }
+            refreshAdminSectionContent(); // Refresh content when section changes
+        }
+        
+        function refreshAdminSectionContent() {
+            // This function ensures the correct language's data is displayed in the admin panel sections
+            const activeAdminSection = document.querySelector('.admin-section[style*="block"]');
+            if (!activeAdminSection) return;
+
+            if (activeAdminSection.id === 'admin-blurbs') {
+                populateAdminBlurbList();
+                populateCategoryOptionsForAdminBlurbForm();
+            } else if (activeAdminSection.id === 'admin-categories') {
+                populateAdminCategoryLists();
+                populateParentCategoryOptionsForAdminForm();
+            } else if (activeAdminSection.id === 'admin-languages') {
+                populateExistingLanguagesList();
+            }
+        }
+        
+        // Admin Blurbs CRUD
+        function populateAdminBlurbList(searchTerm = '') {
+            if(!adminBlurbList) return;
+            const blurbsForAdminLang = getAdminBlurbs();
+            const filtered = searchTerm ? blurbsForAdminLang.filter(b => 
+                b.title.toLowerCase().includes(searchTerm) || 
+                b.content.toLowerCase().includes(searchTerm) ||
+                (b.tags && b.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+            ) : blurbsForAdminLang;
+            
+            adminBlurbList.innerHTML = '';
+            if (filtered.length === 0) {
+                adminBlurbList.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No blurbs found.</td></tr>'; return;
+            }
+            filtered.forEach(b => {
+                const row = adminBlurbList.insertRow();
+                row.className = 'admin-table-row';
+                row.innerHTML = `<td>${b.id}</td><td>${b.title}</td><td>${getAdminCategoryName(b.mainCategory, b.category, currentAdminEditingLang)}</td><td style="text-align:right;"><button class="admin-action-btn edit-btn" data-id="${b.id}"><i class="fas fa-edit"></i></button><button class="admin-action-btn delete-btn" data-id="${b.id}"><i class="fas fa-trash-alt"></i></button></td>`;
+            });
+        }
+        function filterAdminBlurbs(term) { populateAdminBlurbList(term); }
+        function openAddBlurbForm() {
+            clearBlurbForm();
+            if(blurbFormTitleEl) blurbFormTitleEl.textContent = `Add New Blurb (${currentAdminEditingLang.toUpperCase()})`;
+            if(blurbForm) blurbForm.style.display = 'block';
+            populateCategoryOptionsForAdminBlurbForm();
+        }
+        function editAdminBlurb(id) {
+            const blurbsForAdminLang = getAdminBlurbs();
+            const blurb = blurbsForAdminLang.find(b => b.id === id);
+            if (!blurb || !blurbForm) return;
+            if(blurbFormTitleEl) blurbFormTitleEl.textContent = `Edit Blurb (${currentAdminEditingLang.toUpperCase()})`;
+            if(blurbFormTitleInput) blurbFormTitleInput.value = blurb.title;
+            if(blurbFormIdInput) blurbFormIdInput.value = blurb.id;
+            if(blurbFormContent) blurbFormContent.value = blurb.content;
+            if(blurbFormTags) blurbFormTags.value = blurb.tags ? blurb.tags.join(', ') : '';
+            populateCategoryOptionsForAdminBlurbForm();
+            if(blurbFormMainCategory) blurbFormMainCategory.value = blurb.mainCategory;
+            updateSubcategoryOptionsForAdminBlurbForm(blurb.mainCategory);
+            if(blurbFormSubcategory) blurbFormSubcategory.value = blurb.category;
+            blurbForm.style.display = 'block';
+        }
+        function saveAdminBlurb() {
+            if (!blurbFormTitleInput?.value || !blurbFormContent?.value) {
+                showConfirmDialog('Title and Content are required.', () => {}, true); return;
+            }
+            const blurbsForAdminLang = getAdminBlurbs();
+            const id = blurbFormIdInput?.value ? parseInt(blurbFormIdInput.value) : generateNewAdminBlurbId(currentAdminEditingLang);
+            const newBlurb = {
+                id: id, title: blurbFormTitleInput.value, content: blurbFormContent.value,
+                tags: blurbFormTags?.value.split(',').map(t => t.trim()).filter(t => t) || [],
+                mainCategory: blurbFormMainCategory?.value || '', category: blurbFormSubcategory?.value || '',
+                isFavorite: false // Default, preserved if editing
+            };
+            const idx = blurbsForAdminLang.findIndex(b => b.id === id);
+            if (idx > -1) {
+                newBlurb.isFavorite = blurbsForAdminLang[idx].isFavorite;
+                blurbsForAdminLang[idx] = newBlurb;
+            } else {
+                blurbsForAdminLang.push(newBlurb);
+            }
+            saveDataToLocalStorage();
+            populateAdminBlurbList();
+            if(blurbForm) blurbForm.style.display = 'none';
+            // Also update main UI if admin is editing current language
+            if (currentAdminEditingLang === currentLanguage) initializeUIForLanguage(currentLanguage);
+        }
+        function clearBlurbForm() {
+            if(blurbFormTitleInput) blurbFormTitleInput.value = '';
+            if(blurbFormContent) blurbFormContent.value = '';
+            if(blurbFormTags) blurbFormTags.value = '';
+            if(blurbFormIdInput) blurbFormIdInput.value = '';
+            if(blurbFormMainCategory && blurbFormMainCategory.options.length > 0) {
+                blurbFormMainCategory.selectedIndex = 0;
+                 updateSubcategoryOptionsForAdminBlurbForm(blurbFormMainCategory.value);
+            } else if(blurbFormSubcategory) {
+                blurbFormSubcategory.innerHTML = '<option value="">-- Select Main Category --</option>';
+            }
+        }
+        function generateNewAdminBlurbId(lang) {
+            const blurbsForLang = appContentByLang[lang].blurbs;
+            return blurbsForLang.length > 0 ? Math.max(0, ...blurbsForLang.map(b => b.id)) + 1 : 1;
+        }
+        function confirmDeleteAdminBlurb(id) {
+            const blurb = getAdminBlurbs().find(b => b.id === id);
+            if(!blurb) return;
+            showConfirmDialog(`Delete blurb "${blurb.title}" for language ${currentAdminEditingLang.toUpperCase()}?`, () => deleteAdminBlurb(id));
+        }
+        function deleteAdminBlurb(id) {
+            appContentByLang[currentAdminEditingLang].blurbs = getAdminBlurbs().filter(b => b.id !== id);
+            saveDataToLocalStorage();
+            populateAdminBlurbList();
+            if (currentAdminEditingLang === currentLanguage) initializeUIForLanguage(currentLanguage);
+        }
+        function populateCategoryOptionsForAdminBlurbForm() {
+            if (!blurbFormMainCategory) return;
+            const cats = getAdminCategoryStructure();
+            blurbFormMainCategory.innerHTML = '<option value="">-- Select Main --</option>';
+            Object.keys(cats).forEach(id => {
+                const opt = document.createElement('option');
+                opt.value = id; opt.textContent = cats[id].name;
+                blurbFormMainCategory.appendChild(opt);
+            });
+            blurbFormMainCategory.onchange = () => updateSubcategoryOptionsForAdminBlurbForm(blurbFormMainCategory.value);
+            updateSubcategoryOptionsForAdminBlurbForm(blurbFormMainCategory.value);
+        }
+        function updateSubcategoryOptionsForAdminBlurbForm(mainCatId) {
+            if (!blurbFormSubcategory) return;
+            const cats = getAdminCategoryStructure();
+            blurbFormSubcategory.innerHTML = '<option value="">-- Select Sub --</option>';
+            if (mainCatId && cats[mainCatId] && cats[mainCatId].subcategories) {
+                cats[mainCatId].subcategories.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id; opt.textContent = sub.name;
+                    blurbFormSubcategory.appendChild(opt);
+                });
+            }
+        }
+
+        // Admin Categories CRUD
+        function populateAdminCategoryLists(mainCatSearch = '', subCatSearch = '') {
+            populateAdminMainCategoryList(mainCatSearch);
+            populateAdminSubCategoryList(subCatSearch);
+        }
+        function populateAdminMainCategoryList(searchTerm = '') {
+            if(!adminCategoryListEl) return;
+            const cats = getAdminCategoryStructure();
+            const filtered = searchTerm ? Object.entries(cats).filter(([id,c]) => id.toLowerCase().includes(searchTerm) || c.name.toLowerCase().includes(searchTerm)) 
+                                      : Object.entries(cats);
+            adminCategoryListEl.innerHTML = '';
+            if (filtered.length === 0) {
+                adminCategoryListEl.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;">No main categories.</td></tr>'; return;
+            }
+            filtered.forEach(([id, cat]) => {
+                const row = adminCategoryListEl.insertRow();
+                row.className = 'admin-table-row';
+                row.innerHTML = `<td>${id}</td><td>${cat.name}</td><td style="text-align:right;"><button class="admin-action-btn edit-btn" data-type="main" data-id="${id}"><i class="fas fa-edit"></i></button><button class="admin-action-btn delete-btn" data-type="main" data-id="${id}"><i class="fas fa-trash-alt"></i></button></td>`;
+            });
+        }
+        function populateAdminSubCategoryList(searchTerm = '') {
+            if(!adminSubcategoryListEl) return;
+            const cats = getAdminCategoryStructure();
+            let allSubs = [];
+            Object.entries(cats).forEach(([pId, pCat]) => {
+                if (pCat.subcategories) {
+                    pCat.subcategories.forEach(s => allSubs.push({...s, parentId: pId, parentName: pCat.name}));
+                }
+            });
+            const filtered = searchTerm ? allSubs.filter(s => s.id.toLowerCase().includes(searchTerm) || s.name.toLowerCase().includes(searchTerm) || s.parentName.toLowerCase().includes(searchTerm)) 
+                                        : allSubs;
+            adminSubcategoryListEl.innerHTML = '';
+             if (filtered.length === 0) {
+                adminSubcategoryListEl.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No subcategories.</td></tr>'; return;
+            }
+            filtered.forEach(s => {
+                const row = adminSubcategoryListEl.insertRow();
+                row.className = 'admin-table-row';
+                row.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td>${s.parentName}</td><td style="text-align:right;"><button class="admin-action-btn edit-btn" data-type="sub" data-id="${s.id}" data-parent="${s.parentId}"><i class="fas fa-edit"></i></button><button class="admin-action-btn delete-btn" data-type="sub" data-id="${s.id}" data-parent="${s.parentId}"><i class="fas fa-trash-alt"></i></button></td>`;
+            });
+        }
+        function filterAdminMainCategories(term) { populateAdminMainCategoryList(term); }
+        function filterAdminSubCategories(term) { populateAdminSubCategoryList(term); }
+
+        function openAddCategoryForm() {
+            clearCategoryForm();
+            if(categoryFormTypeInput) categoryFormTypeInput.value = 'main';
+            if(categoryFormTitleEl) categoryFormTitleEl.textContent = `Add Main Category (${currentAdminEditingLang.toUpperCase()})`;
+            if(parentCategoryGroup) parentCategoryGroup.style.display = 'none';
+            if(categoryForm) categoryForm.style.display = 'block';
+        }
+        function openAddSubcategoryForm() {
+            clearCategoryForm();
+            if(categoryFormTypeInput) categoryFormTypeInput.value = 'sub';
+            if(categoryFormTitleEl) categoryFormTitleEl.textContent = `Add Subcategory (${currentAdminEditingLang.toUpperCase()})`;
+            if(parentCategoryGroup) parentCategoryGroup.style.display = 'block';
+            populateParentCategoryOptionsForAdminForm();
+            if(categoryForm) categoryForm.style.display = 'block';
+        }
+        function editAdminCategory(id, type, parentId = null) {
+            if(!categoryForm) return;
+            clearCategoryForm();
+            if(categoryFormTypeInput) categoryFormTypeInput.value = type;
+            if(categoryFormOriginalIdInput) categoryFormOriginalIdInput.value = id;
+            const cats = getAdminCategoryStructure();
+
+            if (type === 'main') {
+                const cat = cats[id];
+                if (!cat) return;
+                if(categoryFormTitleEl) categoryFormTitleEl.textContent = `Edit Main Category (${currentAdminEditingLang.toUpperCase()})`;
+                if(categoryFormIdInput) categoryFormIdInput.value = id;
+                if(categoryFormNameInput) categoryFormNameInput.value = cat.name;
+                if(parentCategoryGroup) parentCategoryGroup.style.display = 'none';
+            } else { // sub
+                const parentCat = cats[parentId];
+                const sub = parentCat?.subcategories?.find(s => s.id === id);
+                if (!sub) return;
+                if(categoryFormTitleEl) categoryFormTitleEl.textContent = `Edit Subcategory (${currentAdminEditingLang.toUpperCase()})`;
+                if(categoryFormIdInput) categoryFormIdInput.value = id;
+                if(categoryFormNameInput) categoryFormNameInput.value = sub.name;
+                if(parentCategoryGroup) parentCategoryGroup.style.display = 'block';
+                populateParentCategoryOptionsForAdminForm();
+                if(categoryFormParentSelect) categoryFormParentSelect.value = parentId;
+            }
+            categoryForm.style.display = 'block';
+        }
+       function saveAdminCategory() {
+    const id = categoryFormIdInput?.value.trim();
+    const name = categoryFormNameInput?.value.trim();
+    const type = categoryFormTypeInput?.value;
+    const originalId = categoryFormOriginalIdInput?.value;
+    const parentId = categoryFormParentSelect?.value;
+
+    if (!id || !name) { showConfirmDialog('ID and Name are required.', () => {}, true); return; }
+
+    const cats = getAdminCategoryStructure();
+    if (type === 'main') {
+        if (id !== originalId && cats[id]) { showConfirmDialog(`Main Cat ID "${id}" already exists.`, () => {}, true); return; }
+        if (originalId && originalId !== id) { // ID changed
+            cats[id] = { ...cats[originalId], name: name };
+            delete cats[originalId];
+            getAdminBlurbs().forEach(b => { if (b.mainCategory === originalId) b.mainCategory = id; });
+        } else if (cats[id]) { // Existing, update name
+            cats[id].name = name;
+        } else { // New
+            cats[id] = { name: name, subcategories: [] };
+        }
+            } else { // sub
+                if (!parentId || !cats[parentId]) { showConfirmDialog('Parent category not found.', () => {}, true); return; }
+                const parentCat = cats[parentId];
+                if (parentCat.subcategories.some(s => s.id === id && id !== originalId)) {
+                    showConfirmDialog(`Subcat ID "${id}" already exists in parent.`, () => {}, true); return;
+                }
+                // Remove from old parent if editing and parent might have changed or ID changed
+                if (originalId) {
+                    Object.values(cats).forEach(p => p.subcategories = p.subcategories.filter(s => s.id !== originalId));
+                }
+                const subIndex = parentCat.subcategories.findIndex(s => s.id === originalId); // Find by original ID in current parent
+                if (subIndex > -1) parentCat.subcategories[subIndex] = { id, name };
+                else parentCat.subcategories.push({ id, name });
+
+                getAdminBlurbs().forEach(b => { if (b.category === originalId && b.mainCategory === (categoryFormParentSelect.querySelector(`option[value="${originalId}"]`)?.dataset.originalParent || parentId) ) { b.category = id; b.mainCategory = parentId; } });
+            }
+            saveDataToLocalStorage();
+            populateAdminCategoryLists();
+            populateCategoryOptionsForAdminBlurbForm(); // For blurb form
+            if (currentAdminEditingLang === currentLanguage) initializeUIForLanguage(currentLanguage); // Update main UI
+            if(categoryForm) categoryForm.style.display = 'none';
+        }
+        function clearCategoryForm() { 
+            if(categoryFormIdInput) categoryFormIdInput.value = '';
+            if(categoryFormNameInput) categoryFormNameInput.value = '';
+            if(categoryFormOriginalIdInput) categoryFormOriginalIdInput.value = '';
+            if(categoryFormParentSelect && categoryFormParentSelect.options.length > 0) categoryFormParentSelect.selectedIndex = 0;
+        }
+        function populateParentCategoryOptionsForAdminForm() {
+            if (!categoryFormParentSelect) return;
+            const cats = getAdminCategoryStructure();
+            categoryFormParentSelect.innerHTML = '';
+            Object.keys(cats).forEach(id => {
+                const opt = document.createElement('option');
+                opt.value = id; opt.textContent = cats[id].name;
+                categoryFormParentSelect.appendChild(opt);
+            });
+        }
+        function confirmDeleteAdminCategory(id, type, parentId = null) {
+            const cats = getAdminCategoryStructure();
+            let msg = '';
+            if (type === 'main') {
+                const cat = cats[id]; if (!cat) return;
+                msg = `Delete main category "${cat.name}" for ${currentAdminEditingLang.toUpperCase()}?`;
+                if (cat.subcategories?.length > 0) msg += ` This also deletes ${cat.subcategories.length} subcategories.`;
+                if (getAdminBlurbs().some(b => b.mainCategory === id)) msg += ` Blurbs will be affected.`;
+                showConfirmDialog(msg, () => deleteAdminMainCategory(id));
+            } else { // sub
+                const pCat = cats[parentId]; const sub = pCat?.subcategories?.find(s => s.id === id); if (!sub) return;
+                msg = `Delete subcategory "${sub.name}" from "${pCat.name}" for ${currentAdminEditingLang.toUpperCase()}?`;
+                if (getAdminBlurbs().some(b => b.category === id && b.mainCategory === parentId)) msg += ` Blurbs will be affected.`;
+                showConfirmDialog(msg, () => deleteAdminSubCategory(id, parentId));
+            }
+        }
+        function deleteAdminMainCategory(id) {
+            delete appContentByLang[currentAdminEditingLang].categoryStructure[id];
+            getAdminBlurbs().forEach(b => { if (b.mainCategory === id) { b.mainCategory = ''; b.category = ''; } });
+            saveDataToLocalStorage();
+            populateAdminCategoryLists(); populateCategoryOptionsForAdminBlurbForm();
+            if (currentAdminEditingLang === currentLanguage) initializeUIForLanguage(currentLanguage);
+        }
+        function deleteAdminSubCategory(id, parentId) {
+            const parentCat = appContentByLang[currentAdminEditingLang].categoryStructure[parentId];
+            if (parentCat) parentCat.subcategories = parentCat.subcategories.filter(s => s.id !== id);
+            getAdminBlurbs().forEach(b => { if (b.category === id && b.mainCategory === parentId) b.category = ''; });
+            saveDataToLocalStorage();
+            populateAdminCategoryLists(); populateCategoryOptionsForAdminBlurbForm();
+            if (currentAdminEditingLang === currentLanguage) initializeUIForLanguage(currentLanguage);
+        }
+
+        // Admin Languages Section
+        function populateExistingLanguagesList() {
+            if (!existingLanguagesList) return;
+            existingLanguagesList.innerHTML = '';
+            Object.keys(appContentByLang).forEach(langCode => {
+                const langName = appContentByLang[langCode].languageName || langCode.toUpperCase();
+                const li = document.createElement('li');
+                li.textContent = `${langName} (${langCode})`;
+                // Could add delete button here in future
+                existingLanguagesList.appendChild(li);
+            });
+        }
+        function handleAddNewLanguage() {
+            const code = newLangCodeInput?.value.trim().toLowerCase();
+            const name = newLangNameInput?.value.trim();
+            if (!code || !name) {
+                showConfirmDialog("Language code and name are required.", () => {}, true); return;
+            }
+            if (!/^[a-z]{2,3}(?:-[a-z]{2,4})?$/i.test(code)) { // Basic lang code format check
+                 showConfirmDialog("Invalid language code format (e.g., 'es', 'en-US').", () => {}, true); return;
+            }
+            if (appContentByLang[code]) {
+                showConfirmDialog(`Language code "${code}" already exists.`, () => {}, true); return;
+            }
+            // Create new language entry, copying structure from English (or current admin lang)
+            appContentByLang[code] = deepClone(appContentByLang['en'] || Object.values(appContentByLang)[0]); // Fallback if 'en' is somehow gone
+            appContentByLang[code].languageName = name;
+            appContentByLang[code].blurbs = []; // Start with empty blurbs for new language
+            // Or, if you want to copy blurbs too:
+            // appContentByLang[code].blurbs = deepClone(appContentByLang['en'].blurbs);
+            // Then clear them or let admin manage. For now, empty.
+            
+            saveDataToLocalStorage();
+            populateExistingLanguagesList();
+            populateLanguageSelectors(); // Update all language dropdowns
+            if(newLangCodeInput) newLangCodeInput.value = '';
+            if(newLangNameInput) newLangNameInput.value = '';
+            showConfirmDialog(`Language "${name} (${code})" added. You can now select it for editing.`, () => {}, true);
+        }
+
+
+        // Admin Export/Import (operates on the entire appContentByLang)
+        function handleExportData() {
+            const jsonData = JSON.stringify(appContentByLang, null, 2);
+            if(exportDataTextarea) {
+                 exportDataTextarea.value = jsonData;
+                 if(exportDataContainer) exportDataContainer.style.display = 'block';
+                 showCopyNotification(exportDataBtn, 'Data Ready in Textarea!', 'Export All Data');
+            } else { // Fallback if textarea not found
+                copyToClipboard(jsonData);
+                showCopyNotification(exportDataBtn, 'Data Copied!', 'Export All Data');
+            }
+        }
+        function handleImportData() {
+            if(!importDataTextarea || !importDataTextarea.value) { showConfirmDialog("No data to import.", () => {}, true); return; }
+            try {
+                const imported = JSON.parse(importDataTextarea.value);
+                // Basic validation: check if it's an object
+                if (typeof imported !== 'object' || imported === null || Array.isArray(imported)) {
+                    throw new Error('Invalid data format. Must be an object keyed by language codes.');
+                }
+                // Further validation: check if each language has blurbs and categoryStructure
+                for (const lang in imported) {
+                    if (!imported[lang].blurbs || !imported[lang].categoryStructure || !imported[lang].languageName) {
+                         throw new Error(`Invalid structure for language "${lang}". Missing blurbs, categoryStructure, or languageName.`);
+                    }
+                }
+
+                showConfirmDialog('Replace ALL existing data (all languages) with imported data?', () => {
+                    appContentByLang = imported;
+                    saveDataToLocalStorage();
+                    // Re-initialize everything
+                    currentLanguage = Object.keys(appContentByLang)[0] || 'en'; // Default to first lang or 'en'
+                    currentAdminEditingLang = currentLanguage;
+                    setLangInURL(currentLanguage);
+                    populateLanguageSelectors();
+                    initializeUIForLanguage(currentLanguage);
+                    refreshAdminSectionContent(); // Refresh admin UI too
+                    if(importForm) importForm.style.display = 'none';
+                    showConfirmDialog("Data imported successfully!", () => {}, true);
+                });
+            } catch (error) { showConfirmDialog('Error importing data: ' + error.message, () => {}, true); }
+        }
+        
+        // Admin Global Event Delegation & Show/Hide All
+        function handleAdminActionDelegation(event) {
+            const target = event.target.closest('.admin-action-btn');
+            if (!target) return;
+            const id = target.dataset.id;
+            const type = target.dataset.type;
+            const parentId = target.dataset.parent;
+
+            if (target.classList.contains('edit-btn')) {
+                if (target.closest('#blurb-list')) editAdminBlurb(parseInt(id));
+                else if (type === 'main') editAdminCategory(id, 'main');
+                else if (type === 'sub') editAdminCategory(id, 'sub', parentId);
+            } else if (target.classList.contains('delete-btn')) {
+                if (target.closest('#blurb-list')) confirmDeleteAdminBlurb(parseInt(id));
+                else if (type === 'main') confirmDeleteAdminCategory(id, 'main');
+                else if (type === 'sub') confirmDeleteAdminCategory(id, 'sub', parentId);
+            }
+        }
+        function handleAdminShowHideAll() {
+            const targetType = this.dataset.target; // blurbs, categories, subcategories
+            const show = this.classList.contains('show-all-btn');
+            const searchEl = document.getElementById(`admin-${targetType === 'blurbs' ? 'blurb' : (targetType === 'categories' ? 'category' : 'subcategory')}-search`);
+            const listBodyEl = document.getElementById(targetType === 'blurbs' ? 'blurb-list' : (targetType === 'categories' ? 'category-list' : 'subcategory-list'));
+            
+            if (show) {
+                if(searchEl) searchEl.value = '';
+                if (targetType === 'blurbs') populateAdminBlurbList();
+                else if (targetType === 'categories') populateAdminMainCategoryList();
+                else if (targetType === 'subcategories') populateAdminSubCategoryList();
+            } else {
+                if(listBodyEl) listBodyEl.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;">Items hidden.</td></tr>`;
+            }
+        }
+
+        // --- Confirmation Dialog --- 
+        function showConfirmDialog(message, onConfirm, isAlert = false) {
+            const dialog = document.getElementById('permanent-confirm-dialog');
+            const msgEl = document.getElementById('confirm-message');
+            const cancel = document.getElementById('confirm-cancel-btn');
+            const ok = document.getElementById('confirm-ok-btn');
+            if (!dialog || !msgEl || !cancel || !ok) { /* Fallback to browser alert if elements not found */ alert(message); return; }
+            msgEl.innerHTML = message.replace(/\n/g, '<br>');
+            cancel.style.display = isAlert ? 'none' : '';
+            dialog.style.display = 'flex';
+            // Clone and replace to remove existing event listeners
+            const newOk = ok.cloneNode(true); ok.parentNode.replaceChild(newOk, ok);
+            const newCancel = cancel.cloneNode(true); cancel.parentNode.replaceChild(newCancel, cancel);
+            newOk.onclick = () => { dialog.style.display = 'none'; if (!isAlert && typeof onConfirm === 'function') setTimeout(() => { try { onConfirm(); } catch(e){console.error(e);} },0); };
+            if (!isAlert) newCancel.onclick = () => dialog.style.display = 'none';
+            // Close on overlay click for alerts only
+            dialog.onclick = (e) => { if (e.target === dialog && isAlert) dialog.style.display = 'none'; };
+        }
+
+        // Helper to get category name for admin display, considering current admin language
+        function getAdminCategoryName(mainCatId, subcatId, adminLang) {
+            const adminCats = appContentByLang[adminLang]?.categoryStructure || {};
+            const mainCategory = adminCats[mainCatId];
+            if (!mainCategory) return 'Unknown Main';
+            const subcategory = mainCategory.subcategories?.find(sub => sub.id === subcatId);
+            return `${mainCategory.name}${subcategory ? ` / ${subcategory.name}` : ''}`;
+        }
+
+
+    </script>
+</body>
+</html>
